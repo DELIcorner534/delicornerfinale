@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panier - Delicorner. Passez votre commande et payez avec Bancontact.">
+    <title>Panier - Delicorner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <a href="index.html">
+                            <span class="logo-text">DELI<span class="logo-accent">CORNER</span></span>
+                            <span class="halal-badge">HALAL</span>
+                        </a>
+                    </div>
+                    <div class="nav-right">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <ul class="nav-menu">
+                            <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                            <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                            <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                            <li>
+                                <!-- Language Selector -->
+                                <div class="language-selector">
+                                    <button class="lang-btn" id="langBtn">
+                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
+                                        <span class="lang-code" id="langCode">FR</span>
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 4.5l3 3 3-3"/>
+                                        </svg>
+                                    </button>
+                                    <div class="lang-dropdown" id="langDropdown">
+                                        <a href="#" data-lang="fr" class="lang-option">
+                                            <img src="images/flags/fr.svg" alt="Français">
+                                            <span>FR</span>
+                                        </a>
+                                        <a href="#" data-lang="nl" class="lang-option">
+                                            <img src="images/flags/be.svg" alt="Nederlands">
+                                            <span>NL</span>
+                                        </a>
+                                        <a href="#" data-lang="en" class="lang-option">
+                                            <img src="images/flags/gb.svg" alt="English">
+                                            <span>EN</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><a href="cart.html" class="active">🛒 <span id="cartCount" class="cart-count">0</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Cart Content -->
+    <main class="cart-main">
+        <div class="container">
+            <div class="cart-wrapper">
+                <!-- Cart Items -->
+                <div class="cart-items-section">
+                    <div id="cartItems" class="cart-items">
+                        <!-- Cart items will be dynamically inserted here -->
+                        <div class="cart-empty" id="cartEmpty">
+                            <div class="cart-empty-icon">🛒</div>
+                            <h2 data-i18n="cart.empty">Votre panier est vide</h2>
+                            <p data-i18n="cart.emptyDesc">Ajoutez des articles depuis notre menu pour commencer</p>
+                            <a href="menu.html" class="btn btn-primary" data-i18n="cart.seeMenu">Voir le menu</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkout Summary -->
+                <div class="checkout-summary" id="checkoutSummary" style="display: none;">
+                    <div class="order-time-notice" id="orderTimeNotice">
+                        <p><strong>⏰ Horaires de commande :</strong></p>
+                        <p>Les commandes sont acceptées uniquement le <strong>jeudi et vendredi de 00h à 8h30</strong>.</p>
+                        <p class="simulation-notice" style="display: none; color: #ff9800; font-size: 0.9rem; margin-top: 0.5rem;">
+                            <em>Mode simulation activé - Les commandes sont actuellement autorisées à tout moment pour les tests.</em>
+                        </p>
+                    </div>
+                    <h2 data-i18n="cart.summary">Récapitulatif</h2>
+                    
+                    <div class="summary-row">
+                        <span data-i18n="cart.subtotal">Sous-total</span>
+                        <span id="subtotal">€0,00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span data-i18n="cart.delivery">Livraison</span>
+                        <span data-i18n="cart.free">Gratuite</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span data-i18n="cart.total">Total</span>
+                        <span id="total">€0,00</span>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <!-- Checkout Form -->
+                    <form id="checkoutForm" class="checkout-form">
+                        <h3 data-i18n="cart.deliveryInfo">Informations de livraison</h3>
+                        
+                        <div class="form-group">
+                            <label for="deliveryName" data-i18n="cart.deliveryName">Nom complet *</label>
+                            <input type="text" id="deliveryName" name="delivery_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deliveryClass">Classe *</label>
+                            <input type="text" id="deliveryClass" name="delivery_class" placeholder="Ex: 3A, 4B, 5C..." required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deliverySchool">École *</label>
+                            <select id="deliverySchool" name="delivery_school" required>
+                                <option value="">Sélectionnez une école</option>
+                                <option value="Heilig Hart">Heilig Hart</option>
+                                <option value="College Halle">College Halle</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deliveryPhone" data-i18n="cart.deliveryPhone">Téléphone *</label>
+                            <input type="tel" id="deliveryPhone" name="delivery_phone" required>
+                        </div>
+
+                        <!-- Temporairement désactivé
+                        <div class="form-group">
+                            <label for="deliveryAddress" data-i18n="cart.deliveryAddress">Adresse *</label>
+                            <input type="text" id="deliveryAddress" name="delivery_address" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="deliveryPostal" data-i18n="cart.deliveryPostal">Code postal *</label>
+                                <input type="text" id="deliveryPostal" name="delivery_postal" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="deliveryCity" data-i18n="cart.deliveryCity">Ville *</label>
+                                <input type="text" id="deliveryCity" name="delivery_city" required>
+                            </div>
+                        </div>
+                        -->
+
+                        <div class="form-group">
+                            <label for="deliveryNotes" data-i18n="cart.deliveryNotes">Remarques (optionnel)</label>
+                            <textarea id="deliveryNotes" name="delivery_notes" rows="3" data-i18n-placeholder="cart.deliveryNotesPlaceholder" placeholder="Instructions spéciales pour la livraison..."></textarea>
+                        </div>
+
+                        <hr class="summary-divider">
+
+                        <h3 data-i18n="cart.paymentMethod">Méthode de paiement</h3>
+                        
+                        <div class="payment-methods">
+                            <label class="payment-method active" for="payment-bancontact">
+                                <input type="radio" id="payment-bancontact" name="payment_method" value="bancontact" checked>
+                                <div class="payment-method-content">
+                                    <div class="payment-icon">💳</div>
+                                    <div>
+                                        <strong data-i18n="cart.bancontact">Bancontact</strong>
+                                        <span data-i18n="cart.bancontactDesc">Paiement sécurisé en ligne</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-checkout" id="checkoutBtn">
+                            <span>✅ Valider et envoyer la commande</span>
+                            <span class="checkout-total">€0,00</span>
+                        </button>
+
+                        <p class="payment-security" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
+                            📱 Votre commande sera automatiquement envoyée par WhatsApp à la sandwicherie après validation.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Delicorner</h3>
+                    <p data-i18n="footer.tagline">Votre sandwicherie artisanale préférée</p>
+                    <div class="halal-badge-footer" data-i18n="footer.certified">HALAL CERTIFIÉ</div>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.navigation">Navigation</h4>
+                    <ul>
+                        <li><a href="index.html" data-i18n="nav.home">Accueil</a></li>
+                        <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.contact">Contact</h4>
+                    <ul>
+                        <li>📍 <span data-i18n="contact.addressValue">Cypriaan Verhavertstraat 156, 1500 Halle</span></li>
+                        <li>📞 <a href="tel:+32488153993" data-i18n="contact.phoneValue">0488/153.993</a></li>
+                        <li>✉️ <a href="mailto:contact@delicorner.be">contact@delicorner.be</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.hours">Horaires</h4>
+                    <ul>
+                        <li data-i18n="footer.weekdays">Lun - Mar: 7h - 17h</li>
+                        <li data-i18n="footer.wednesday">Mer: 7h - 14h</li>
+                        <li data-i18n="footer.thuFri">Jeu - Ven: 7h - 17h</li>
+                        <li data-i18n="footer.weekend">Sam - Dim: Fermé</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.rights">&copy; 2024 Delicorner. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/whatsapp-order.js"></script>
+    <script src="js/cart-page.js"></script>
+    <script src="js/bancontact.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="À propos de Delicorner - Notre histoire, nos valeurs et notre passion pour les sandwiches artisanaux.">
+    <title>À propos - Delicorner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <a href="index.html">
+                            <span class="logo-text">DELI<span class="logo-accent">CORNER</span></span>
+                            <span class="halal-badge">HALAL</span>
+                        </a>
+                    </div>
+                    <div class="nav-right">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <ul class="nav-menu">
+                            <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                            <li><a href="about.html" class="active" data-i18n="nav.about">À propos</a></li>
+                            <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                            <li>
+                                <!-- Language Selector -->
+                                <div class="language-selector">
+                                    <button class="lang-btn" id="langBtn">
+                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
+                                        <span class="lang-code" id="langCode">FR</span>
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 4.5l3 3 3-3"/>
+                                        </svg>
+                                    </button>
+                                    <div class="lang-dropdown" id="langDropdown">
+                                        <a href="#" data-lang="fr" class="lang-option">
+                                            <img src="images/flags/fr.svg" alt="Français">
+                                            <span>FR</span>
+                                        </a>
+                                        <a href="#" data-lang="nl" class="lang-option">
+                                            <img src="images/flags/be.svg" alt="Nederlands">
+                                            <span>NL</span>
+                                        </a>
+                                        <a href="#" data-lang="en" class="lang-option">
+                                            <img src="images/flags/gb.svg" alt="English">
+                                            <span>EN</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><a href="cart.html">🛒 <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- About Content -->
+    <main class="about-main">
+        <div class="container">
+            <!-- Story Section -->
+            <section class="about-section">
+                <div class="about-content">
+                    <div class="about-text">
+                        <h2 data-i18n="about.story.title">Notre Histoire</h2>
+                        <p data-i18n="about.story.p1">Delicorner est née d'une passion simple : créer les meilleurs sandwiches artisanaux en utilisant des ingrédients frais et de qualité. Depuis nos débuts, nous nous engageons à offrir à nos clients une expérience culinaire unique qui allie tradition et innovation.</p>
+                        <p data-i18n="about.story.p2">Chaque sandwich que nous préparons est le fruit d'un savoir-faire transmis et d'une attention particulière aux détails. Nous croyons que la qualité commence par le choix des ingrédients et se termine par la satisfaction de chaque bouchée.</p>
+                    </div>
+                    <div class="about-image-placeholder">
+                        <div class="placeholder-content">🍽️</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Values Section -->
+            <section class="values-section">
+                <h2 data-i18n="about.values.title">Nos Valeurs</h2>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <div class="value-icon">🌱</div>
+                        <h3 data-i18n="about.values.fresh.title">Fraîcheur</h3>
+                        <p data-i18n="about.values.fresh.desc">Nous sélectionnons chaque jour des ingrédients frais auprès de producteurs locaux pour garantir la meilleure qualité.</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">✨</div>
+                        <h3 data-i18n="about.values.quality.title">Qualité</h3>
+                        <p data-i18n="about.values.quality.desc">Chaque sandwich est préparé sur commande selon nos recettes artisanales, avec un soin méticuleux apporté à chaque étape.</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">🤝</div>
+                        <h3 data-i18n="about.values.respect.title">Respect</h3>
+                        <p data-i18n="about.values.respect.desc">Nous respectons strictement les normes halal et proposons des options pour tous les régimes alimentaires.</p>
+                    </div>
+                    <div class="value-card">
+                        <div class="value-icon">❤️</div>
+                        <h3 data-i18n="about.values.passion.title">Passion</h3>
+                        <p data-i18n="about.values.passion.desc">Notre amour pour la gastronomie se reflète dans chaque création, avec l'envie constante de surprendre et satisfaire nos clients.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mission Section -->
+            <section class="mission-section">
+                <div class="mission-content">
+                    <div class="mission-image-placeholder">
+                        <div class="placeholder-content">👨‍🍳</div>
+                    </div>
+                    <div class="mission-text">
+                        <h2 data-i18n="about.mission.title">Notre Mission</h2>
+                        <p data-i18n="about.mission.p1">Chez Delicorner, notre mission est de redéfinir l'expérience du sandwich en combinant des ingrédients de qualité supérieure, des techniques artisanales et un service chaleureux.</p>
+                        <p data-i18n="about.mission.p2">Nous voulons être bien plus qu'une simple sandwicherie : un lieu de convivialité où chacun peut découvrir ou retrouver le goût authentique des bons produits, préparés avec passion et respect.</p>
+                        <p data-i18n="about.mission.p3">Que vous soyez pressé ou que vous souhaitiez prendre le temps de déguster, nous sommes là pour vous offrir une expérience mémorable, à chaque visite.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Certifications -->
+            <section class="certifications-section">
+                <h2 data-i18n="about.commitments.title">Nos Engagements</h2>
+                <div class="certifications-grid">
+                    <div class="certification-card">
+                        <div class="cert-badge">HALAL</div>
+                        <p data-i18n="about.commitments.halal">Certification Halal garantie</p>
+                    </div>
+                    <div class="certification-card">
+                        <div class="cert-badge">🍃</div>
+                        <p data-i18n="about.commitments.fresh">Produits frais quotidiens</p>
+                    </div>
+                    <div class="certification-card">
+                        <div class="cert-badge">👨‍🍳</div>
+                        <p data-i18n="about.commitments.artisan">Préparation artisanale</p>
+                    </div>
+                    <div class="certification-card">
+                        <div class="cert-badge">❤️</div>
+                        <p data-i18n="about.commitments.service">Service avec le sourire</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2 data-i18n="about.discover">Venez nous découvrir !</h2>
+                <p data-i18n="about.discoverSub">Nous serions ravis de vous accueillir et de partager notre passion avec vous</p>
+                <div class="cta-buttons">
+                    <a href="menu.html" class="btn btn-primary" data-i18n="cta.seeMenu">Découvrir le menu</a>
+                    <a href="contact.html" class="btn btn-outline" data-i18n="nav.contact">Nous contacter</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Delicorner</h3>
+                    <p data-i18n="footer.tagline">Votre sandwicherie artisanale préférée</p>
+                    <div class="halal-badge-footer" data-i18n="footer.certified">HALAL CERTIFIÉ</div>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.navigation">Navigation</h4>
+                    <ul>
+                        <li><a href="index.html" data-i18n="nav.home">Accueil</a></li>
+                        <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.contact">Contact</h4>
+                    <ul>
+                        <li>📍 <span data-i18n="contact.addressValue">Cypriaan Verhavertstraat 156, 1500 Halle</span></li>
+                        <li>📞 <a href="tel:+32488153993" data-i18n="contact.phoneValue">0488/153.993</a></li>
+                        <li>✉️ <a href="mailto:contact@delicorner.be">contact@delicorner.be</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.hours">Horaires</h4>
+                    <ul>
+                        <li data-i18n="footer.weekdays">Lun - Mar: 7h - 17h</li>
+                        <li data-i18n="footer.wednesday">Mer: 7h - 14h</li>
+                        <li data-i18n="footer.thuFri">Jeu - Ven: 7h - 17h</li>
+                        <li data-i18n="footer.weekend">Sam - Dim: Fermé</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.rights">&copy; 2024 Delicorner. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

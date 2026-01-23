@@ -1,0 +1,31 @@
+{
+  "name": "delicorner-whatsapp-backend",
+  "version": "1.0.0",
+  "description": "Backend pour envoyer les commandes Delicorner via WhatsApp (Twilio)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server-meta-whatsapp.js",
+    "start:twilio": "node server.js",
+    "start:meta": "node server-meta-whatsapp.js",
+    "dev": "nodemon server.js",
+    "dev:meta": "nodemon server-meta-whatsapp.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "twilio",
+    "delicorner",
+    "orders"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "twilio": "^4.19.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

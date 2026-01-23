@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mon profil - Delicorner">
+    <title>Mon Profil - Delicorner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <a href="index.html">
+                            <span class="logo-text">DELI<span class="logo-accent">CORNER</span></span>
+                            <span class="halal-badge">HALAL</span>
+                        </a>
+                    </div>
+                    <div class="nav-right">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <ul class="nav-menu">
+                            <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                            <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                            <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                            <li>
+                                <!-- Language Selector -->
+                                <div class="language-selector">
+                                    <button class="lang-btn" id="langBtn">
+                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
+                                        <span class="lang-code" id="langCode">FR</span>
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 4.5l3 3 3-3"/>
+                                        </svg>
+                                    </button>
+                                    <div class="lang-dropdown" id="langDropdown">
+                                        <a href="#" data-lang="fr" class="lang-option">
+                                            <img src="images/flags/fr.svg" alt="Français">
+                                            <span>FR</span>
+                                        </a>
+                                        <a href="#" data-lang="nl" class="lang-option">
+                                            <img src="images/flags/nl.svg" alt="Nederlands">
+                                            <span>NL</span>
+                                        </a>
+                                        <a href="#" data-lang="en" class="lang-option">
+                                            <img src="images/flags/gb.svg" alt="English">
+                                            <span>EN</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><a href="cart.html">🛒 <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Profile Content -->
+    <main class="profile-main">
+        <div class="container">
+            <div class="profile-header">
+                <h1 data-i18n="profile.title">Mon Profil</h1>
+                <button class="btn btn-outline" id="logoutBtn" data-i18n="profile.logout">Déconnexion</button>
+            </div>
+
+            <div class="profile-wrapper">
+                <!-- Profile Info -->
+                <div class="profile-section">
+                    <h2 data-i18n="profile.myInfo">Mes Informations</h2>
+                    <div class="profile-card">
+                        <div class="profile-info-item">
+                            <span class="profile-label" data-i18n="profile.fullName">Nom complet</span>
+                            <span class="profile-value" id="profileName">-</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <span class="profile-label" data-i18n="profile.email">Email</span>
+                            <span class="profile-value" id="profileEmail">-</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <span class="profile-label" data-i18n="profile.phone">Téléphone</span>
+                            <span class="profile-value" id="profilePhone">-</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <span class="profile-label" data-i18n="profile.memberSince">Membre depuis</span>
+                            <span class="profile-value" id="profileDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order History -->
+                <div class="profile-section">
+                    <h2 data-i18n="profile.orderHistory">Historique des Commandes</h2>
+                    <div id="orderHistory" class="order-history">
+                        <div class="order-empty" id="orderEmpty">
+                            <div class="order-empty-icon">📦</div>
+                            <p data-i18n="profile.noOrders">Vous n'avez pas encore de commandes</p>
+                            <a href="menu.html" class="btn btn-primary" data-i18n="profile.seeMenu">Voir le menu</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Delicorner</h3>
+                    <p data-i18n="footer.tagline">Votre sandwicherie artisanale préférée</p>
+                    <div class="halal-badge-footer" data-i18n="footer.certified">HALAL CERTIFIÉ</div>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.navigation">Navigation</h4>
+                    <ul>
+                        <li><a href="index.html" data-i18n="nav.home">Accueil</a></li>
+                        <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.contact">Contact</h4>
+                    <ul>
+                        <li>📍 <span data-i18n="contact.addressValue">Cypriaan Verhavertstraat 156, 1500 Halle</span></li>
+                        <li>📞 <a href="tel:+32488153993" data-i18n="contact.phoneValue">0488/153.993</a></li>
+                        <li>✉️ <a href="mailto:contact@delicorner.be">contact@delicorner.be</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.hours">Horaires</h4>
+                    <ul>
+                        <li data-i18n="footer.weekdays">Lun - Mar: 7h - 17h</li>
+                        <li data-i18n="footer.wednesday">Mer: 7h - 14h</li>
+                        <li data-i18n="footer.thuFri">Jeu - Ven: 7h - 17h</li>
+                        <li data-i18n="footer.weekend">Sam - Dim: Fermé</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.rights">&copy; 2024 Delicorner. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Delicorner - Sandwicherie artisanale avec des produits frais et de qualité. Menu varié de sandwiches, panini et spécialités.">
+    <title>Delicorner - Sandwicherie Artisanale</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <a href="index.html">
+                            <span class="logo-text">DELI<span class="logo-accent">CORNER</span></span>
+                            <span class="halal-badge">HALAL</span>
+                        </a>
+                    </div>
+                    <div class="nav-right">
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <ul class="nav-menu">
+                            <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                            <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                            <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                            <li>
+                                <!-- Language Selector -->
+                                <div class="language-selector">
+                                    <button class="lang-btn" id="langBtn">
+                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
+                                        <span class="lang-code" id="langCode">FR</span>
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 4.5l3 3 3-3"/>
+                                        </svg>
+                                    </button>
+                                    <div class="lang-dropdown" id="langDropdown">
+                                        <a href="#" data-lang="fr" class="lang-option">
+                                            <img src="images/flags/fr.svg" alt="Français">
+                                            <span>FR</span>
+                                        </a>
+                                        <a href="#" data-lang="nl" class="lang-option">
+                                            <img src="images/flags/be.svg" alt="Nederlands">
+                                            <span>NL</span>
+                                        </a>
+                                        <a href="#" data-lang="en" class="lang-option">
+                                            <img src="images/flags/gb.svg" alt="English">
+                                            <span>EN</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><a href="cart.html">🛒 <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section with Real Image -->
+    <section class="hero">
+        <div class="hero-bg-image" style="background-image: url('https://images.unsplash.com/photo-1509722747041-616f39b57569?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-particles"></div>
+        <div class="hero-content">
+            <h1 class="hero-title" data-i18n="hero.title">Delicorner</h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">Des sandwiches artisanaux préparés avec passion</p>
+            <p class="hero-description" data-i18n="hero.description">Fraîcheur, qualité et authenticité dans chaque bouchée</p>
+            <div class="hero-buttons">
+                <a href="menu.html" class="btn btn-primary" data-i18n="hero.ctaMenu">Découvrir le menu</a>
+                <a href="contact.html" class="btn btn-secondary" data-i18n="hero.ctaContact">Nous contacter</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span data-i18n="hero.scroll">Découvrir</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">🥪</div>
+                    <h3 data-i18n="features.fresh">Produits Frais</h3>
+                    <p data-i18n="features.freshDesc">Des ingrédients sélectionnés avec soin pour garantir la fraîcheur et la qualité</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">🌿</div>
+                    <h3 data-i18n="features.halal">Certifié Halal</h3>
+                    <p data-i18n="features.halalDesc">Respect strict des normes halal pour votre tranquillité d'esprit</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">👨‍🍳</div>
+                    <h3 data-i18n="features.homemade">Fait Maison</h3>
+                    <p data-i18n="features.homemadeDesc">Chaque sandwich est préparé sur commande selon nos recettes artisanales</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">❤️</div>
+                    <h3 data-i18n="features.passion">Avec Passion</h3>
+                    <p data-i18n="features.passionDesc">Un savoir-faire transmis et une passion pour la gastronomie belge</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Preview Section -->
+    <section class="menu-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2 data-i18n="menuPreview.title">Nos Spécialités</h2>
+                <p data-i18n="menuPreview.subtitle">Découvrez nos catégories de sandwiches</p>
+            </div>
+            <div class="menu-categories">
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="category-image" style="background-image: url('https://images.unsplash.com/photo-1528735602780-2552fd46c7af?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.basics">The Basics</h3>
+                    <p data-i18n="menuPreview.basicsDesc">Nos classiques, simples et délicieux</p>
+                    <a href="menu.html#basics" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="category-image" style="background-image: url('https://images.unsplash.com/photo-1619976405904-39c5e1b0ec8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.classics">The Classics</h3>
+                    <p data-i18n="menuPreview.classicsDesc">Les incontournables de la maison</p>
+                    <a href="menu.html#classics" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="category-image" style="background-image: url('https://images.unsplash.com/photo-1528607929212-2636ec44253e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.warme">Warme Broodjes</h3>
+                    <p data-i18n="menuPreview.warmeDesc">Sandwiches chauds réconfortants</p>
+                    <a href="menu.html#warme" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="400">
+                    <div class="category-image" style="background-image: url('https://images.unsplash.com/photo-1606755962773-d324e0a13086?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.panini">Panini</h3>
+                    <p data-i18n="menuPreview.paniniDesc">Grillés et savoureux</p>
+                    <a href="menu.html#panini" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2 data-i18n="cta.ready">Prêt à déguster ?</h2>
+                <p data-i18n="cta.visit">Venez nous rendre visite ou contactez-nous pour une commande</p>
+                <div class="cta-buttons">
+                    <a href="menu.html" class="btn btn-primary" data-i18n="cta.seeMenu">Voir le menu complet</a>
+                    <a href="contact.html" class="btn btn-outline" data-i18n="nav.contact">Nous contacter</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Delicorner</h3>
+                    <p data-i18n="footer.tagline">Votre sandwicherie artisanale préférée</p>
+                    <div class="halal-badge-footer" data-i18n="footer.certified">HALAL CERTIFIÉ</div>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.navigation">Navigation</h4>
+                    <ul>
+                        <li><a href="index.html" data-i18n="nav.home">Accueil</a></li>
+                        <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.contact">Contact</h4>
+                    <ul>
+                        <li>📍 <span data-i18n="contact.addressValue">Cypriaan Verhavertstraat 156, 1500 Halle</span></li>
+                        <li>📞 <a href="tel:+32488153993" data-i18n="contact.phoneValue">0488/153.993</a></li>
+                        <li>✉️ <a href="mailto:contact@delicorner.be">contact@delicorner.be</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.hours">Horaires</h4>
+                    <ul>
+                        <li data-i18n="footer.weekdays">Lun - Mar: 7h - 17h</li>
+                        <li data-i18n="footer.wednesday">Mer: 7h - 14h</li>
+                        <li data-i18n="footer.thuFri">Jeu - Ven: 7h - 17h</li>
+                        <li data-i18n="footer.weekend">Sam - Dim: Fermé</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.rights">&copy; 2024 Delicorner. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
