@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Vérification du paiement - Delicorner">
+    <title>Vérification du paiement - Delicorner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <a href="index.html">
+                            <span class="logo-text">DELI<span class="logo-accent">CORNER</span></span>
+                            <span class="halal-badge">HALAL</span>
+                        </a>
+                    </div>
+                    <ul class="nav-menu">
+                        <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                        <li><a href="cart.html">🛒 <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="payment-result-page">
+        <div class="container">
+            <div class="payment-result-content">
+                <div class="payment-success-icon" style="animation: pulse 1s ease-in-out infinite;">⏳</div>
+                <h1>Vérification du paiement...</h1>
+                <p>Merci de patienter.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/cart.js"></script>
+    <script src="js/payment-return.js"></script>
+</body>
+</html>
