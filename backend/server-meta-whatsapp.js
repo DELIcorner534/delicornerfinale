@@ -131,7 +131,7 @@ async function sendTemplateAndText(phoneNumber, message, orderData, orderNumber)
         type: 'template',
         template: { name: META_TEMPLATE_NAME, language: { code: META_TEMPLATE_LANGUAGE } }
     };
-    if ((META_TEMPLATE_NAME === 'delicorner_order' || META_TEMPLATE_NAME === 'order_confirmation' || META_TEMPLATE_NAME === 'delicorner_order_full') && orderData) {
+    if ((META_TEMPLATE_NAME === 'delicorner_order' || META_TEMPLATE_NAME === 'order_confirmation' || META_TEMPLATE_NAME === 'delicorner_order_full' || META_TEMPLATE_NAME === 'order_management_1') && orderData) {
         const name = (orderData.delivery?.name || 'N/A').substring(0, 80);
         const orderNum = String(orderNumber || 'N/A');
         const d = new Date();
@@ -145,6 +145,9 @@ async function sendTemplateAndText(phoneNumber, message, orderData, orderNumber)
             let itemsText = formatItemsList(orderData.items || []);
             if (itemsText.length > 900) itemsText = itemsText.slice(0, 900) + '...';
             templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: orderNum }, { type: 'text', text: name }, { type: 'text', text: orderData.delivery?.phone || 'N/A' }, { type: 'text', text: orderData.delivery?.school || 'N/A' }, { type: 'text', text: orderData.delivery?.class || 'N/A' }, { type: 'text', text: total }, { type: 'text', text: itemsText }] }];
+        } else if (META_TEMPLATE_NAME === 'order_management_1') {
+            // Hi {{1}}, Thank you for your {{2}}! Order #{{3}}. Getting {{4}} ready. Estimated delivery: {{5}}
+            templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: name }, { type: 'text', text: 'order' }, { type: 'text', text: orderNum }, { type: 'text', text: 'order' }, { type: 'date_time', date_time: { fallback_value: dateStr } }] }];
         } else {
             templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: name }, { type: 'text', text: orderNum }, { type: 'date_time', date_time: { fallback_value: dateStr } }] }];
         }

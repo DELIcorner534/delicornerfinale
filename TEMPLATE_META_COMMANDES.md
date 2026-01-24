@@ -27,20 +27,32 @@ Vous recevrez d’abord « Hello World » (ou équivalent), puis le détail comp
 
 ---
 
-## Option 2 : Template « Order confirmation » `order_confirmation` (recommandé)
+## Option 2 : Template « Order confirmation » `order_management_1` (Utility > Order management)
 
 Template de la **bibliothèque** Meta (Order management → Order confirmation).
 
 1. **Message Templates** → **Create Template** → **Browse Templates**.
-2. **Order management** → **Order confirmation** → choisir le template (ex. `order_management_2`).
-3. **Name your template** : `order_confirmation`
-4. **Language** : **English (US)**.
-5. Option « View order details » : laisser **Static** + `https://www.example.com` (ou votre URL), ou désactiver si pas besoin.
+2. **Order management** → **Order confirmation** → choisir le template (ex. « order_management_1 »).
+3. **Name your template** : `order_management_1` (exactement, pour que le backend le reconnaisse).
+4. **Language** : **English (US)** (ou **Dutch (Belgium)** → alors `META_TEMPLATE_LANGUAGE=nl_BE`).
+5. Bouton « View order details » : **Static** → `https://delicornerhalle.be` (ou ton URL).
 6. **Submit** et attendre l’approbation.
 
-Le backend envoie automatiquement : **nom client**, **numéro de commande**, **date de livraison estimée** (J+1).
+Le backend envoie : **nom client** ({{1}}), **"order"** ({{2}}), **numéro de commande** ({{3}}), **"order"** ({{4}}), **date livraison** ({{5}}).
 
-**Variables d’environnement** :
+**Variables d’environnement** (Render) :
+
+```
+META_TEMPLATE_NAME=order_management_1
+META_TEMPLATE_LANGUAGE=en_US
+```
+
+---
+
+## Option 2b : Template « Order confirmation » `order_confirmation`
+
+Même idée, autre variante. **Name your template** : `order_confirmation`.  
+Le backend envoie : nom, numéro, date.
 
 ```
 META_TEMPLATE_NAME=order_confirmation
