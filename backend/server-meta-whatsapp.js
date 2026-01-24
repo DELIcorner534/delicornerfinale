@@ -152,9 +152,13 @@ async function sendTemplateAndText(phoneNumber, message, orderData, orderNumber)
             templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: name }, { type: 'text', text: orderNum }, { type: 'date_time', date_time: { fallback_value: dateStr } }] }];
         }
     }
-    await sendMetaMessage(templatePayload);
+    const templateRes = await sendMetaMessage(templatePayload);
+    const templateId = templateRes?.messages?.[0]?.id;
+    console.log('   Meta template ID:', templateId || '(none)');
     const textRes = await sendMetaMessage({ messaging_product: 'whatsapp', recipient_type: 'individual', to: ph, type: 'text', text: { body: message } });
-    return textRes.messages?.[0]?.id;
+    const textId = textRes?.messages?.[0]?.id;
+    console.log('   Meta text ID:', textId || '(none)');
+    return textId;
 }
 
 // Route pour envoyer un message WhatsApp
@@ -391,8 +395,64 @@ app.get('/api/whatsapp-status', (req, res) => {
         orderToSet: !!META_ORDER_TO,
         templateName: META_TEMPLATE_NAME || null,
         templateLanguage: META_TEMPLATE_LANGUAGE || null,
+        phoneNumberId: META_PHONE_NUMBER_ID || null,
+        orderTo: META_ORDER_TO ? String(META_ORDER_TO).replace(/(.{2})$/, '***') : null,
         hint: 'Vérifiez Render Env (META_ORDER_TO, META_TEMPLATE_*), template Meta approuvé, et numéro "To" dans Meta API Setup.'
     });
+});
+
+// Envoi test (hello_world + texte) vers META_ORDER_TO pour debug
+app.post('/api/test-whatsapp-send', async (req, res) => {
+    try {
+        if (!META_ORDER_TO || !META_PHONE_NUMBER_ID || !META_ACCESS_TOKEN || !META_TEMPLATE_NAME) {
+            return res.status(500).json({
+                success: false,
+                error: 'Config manquante (META_ORDER_TO, META_PHONE_NUMBER_ID, META_ACCESS_TOKEN, META_TEMPLATE_NAME).'
+            });
+        }
+        const ph = String(META_ORDER_TO).replace(/\D/g, '');
+        const templatePayload = {
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: ph,
+            type: 'template',
+            template: { name: META_TEMPLATE_NAME, language: { code: META_TEMPLATE_LANGUAGE || 'en_US' } }
+        };
+        if (META_TEMPLATE_NAME !== 'hello_world') {
+            const name = 'Test';
+            const orderNum = '0000';
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            const dateStr = `${d.getDate()} ${['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()]} ${d.getFullYear()}`;
+            if (META_TEMPLATE_NAME === 'order_management_1') {
+                templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: name }, { type: 'text', text: 'order' }, { type: 'text', text: orderNum }, { type: 'text', text: 'order' }, { type: 'date_time', date_time: { fallback_value: dateStr } }] }];
+            }
+        }
+        const templateRes = await axios.post(META_API_URL, templatePayload, {
+            headers: { 'Authorization': `Bearer ${META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+        });
+        const templateId = templateRes?.data?.messages?.[0]?.id;
+        const textPayload = { messaging_product: 'whatsapp', recipient_type: 'individual', to: ph, type: 'text', text: { body: 'Test Delicorner – si tu reçois ceci, l’API fonctionne.' } };
+        const textRes = await axios.post(META_API_URL, textPayload, {
+            headers: { 'Authorization': `Bearer ${META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+        });
+        const textId = textRes?.data?.messages?.[0]?.id;
+        console.log('✅ Test WhatsApp envoyé →', ph, '| template:', templateId, '| text:', textId);
+        res.json({
+            success: true,
+            templateMessageId: templateId,
+            textMessageId: textId,
+            to: ph
+        });
+    } catch (e) {
+        const meta = e.response?.data || {};
+        console.error('❌ test-whatsapp-send:', meta);
+        res.status(500).json({
+            success: false,
+            error: e.message || 'Erreur Meta',
+            meta: meta
+        });
+    }
 });
 
 // Démarrer le serveur

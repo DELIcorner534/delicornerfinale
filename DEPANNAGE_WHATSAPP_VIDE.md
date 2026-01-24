@@ -35,7 +35,8 @@ Tu dois voir un JSON du type :
 - **`metaOk: false`** → Il manque `META_PHONE_NUMBER_ID` ou `META_ACCESS_TOKEN` dans Render → **Environment**.
 - **`orderToSet: false`** → Il manque **`META_ORDER_TO`** (numéro WhatsApp du shop, ex. `32451032356`). C’est le numéro qui **reçoit** les commandes.
 - **`templateName`** doit correspondre **exactement** au nom du template dans Meta (ex. `order_management_1`).
-- **`templateLanguage`** doit correspondre à la langue du template (ex. `en_US` ou `nl_BE`).
+- **`templateLanguage`** doit correspondre **exactement** à la langue du template dans Meta (ex. `en_US` ou `nl_BE`).  
+  **Erreur Meta `(#132001) Template name does not exist in the translation`** → la langue configurée (`META_TEMPLATE_LANGUAGE`) ne correspond pas à celle du template dans Meta. Par ex. template créé en **Dutch (Belgium)** → utilise **`nl_BE`** ; créé en **English (US)** → **`en_US`**.
 
 ---
 
@@ -49,7 +50,11 @@ Tu dois voir un JSON du type :
 | `META_ACCESS_TOKEN` | Ton token Meta (permanent) | Accès API |
 | **`META_ORDER_TO`** | **`32451032356`** (sans +) | **Numéro qui REÇOIT les commandes** |
 | `META_TEMPLATE_NAME` | `order_management_1` (ou celui que tu utilises) | Template utilisé |
-| `META_TEMPLATE_LANGUAGE` | `en_US` ou `nl_BE` | Langue du template |
+| `META_TEMPLATE_LANGUAGE` | **Doit correspondre à la langue du template dans Meta** : `en_US` (English US) ou `nl_BE` (Dutch Belgium) | Langue du template |
+
+**Important :** Si tu as l’erreur **`(#132001) Template name does not exist in the translation`** / **`order_management_1 does not exist in en_US`**, c’est que le template est dans une autre langue. Vérifie dans **Meta → Message Templates** la langue de `order_management_1` :  
+- **Dutch (Belgium)** → `META_TEMPLATE_LANGUAGE=nl_BE`  
+- **English (US)** → `META_TEMPLATE_LANGUAGE=en_US`  
 
 **Clique sur Save** si tu modifies, puis **Manual Deploy** si besoin.
 
@@ -119,6 +124,37 @@ Invoke-RestMethod -Uri "https://delicorner-whatsapp.onrender.com/send-whatsapp" 
 Remplace `32451032356` par ton **META_ORDER_TO**.  
 Si la réponse contient **`success: true`** et que tu ne reçois rien sur WhatsApp, le blocage est côté **Meta** (template, numéro « To », etc.).
 
+**Test ciblé (envoi vers META_ORDER_TO, aucun paiement) :**
+
+```powershell
+Invoke-RestMethod -Uri "https://delicorner-whatsapp.onrender.com/api/test-whatsapp-send" -Method POST -ContentType "application/json" -Body '{}'
+```
+
+- **`success: true`** + IDs → Meta a accepté ; pas de message → vérifier **「To」** et téléphone.  
+- **`success: false`** + **`meta`** → erreur Meta ; regarder **`meta`** pour le détail.
+
+**Test direct Meta :** **API Setup** → **« Send test message »** vers **+32 451 03 23 56**. Reçu → 「To」 OK. Pas reçu → numéro pas dans 「To」 ou mauvais téléphone.
+
 ---
 
-En résumé : **config Render** (dont **META_ORDER_TO**), **template Meta approuvé** et **numéro « To »** correct sont les trois points à contrôler en priorité.
+## 8. Erreur 132001 : « Template name does not exist in the translation »
+
+**Logs Render :**  
+`(#132001) Template name does not exist in the translation`  
+`details: template name (order_management_1) does not exist in en_US`
+
+**Cause :** La variable **`META_TEMPLATE_LANGUAGE`** sur Render (ex. `en_US`) ne correspond pas à la **langue réelle** du template dans Meta.
+
+**À faire :**
+
+1. Ouvre **Meta** → **WhatsApp** → **Message Templates**.
+2. Trouve le template **`order_management_1`** et note sa **langue** (ex. **Dutch (Belgium)** ou **English (US)**).
+3. Sur **Render** → **Environment** :
+   - Si le template est en **Dutch (Belgium)** → mets **`META_TEMPLATE_LANGUAGE=nl_BE`**.
+   - Si le template est en **English (US)** → **`META_TEMPLATE_LANGUAGE=en_US`** (et vérifie que le template existe bien en en_US dans Meta).
+4. **Save** → **Manual Deploy**.
+5. Refais un test : commande → Bancontact → **Payé**.
+
+---
+
+En résumé : **config Render** (dont **META_ORDER_TO**), **template Meta approuvé**, **langue du template** (`META_TEMPLATE_LANGUAGE` = langue dans Meta) et **numéro « To »** correct sont les points à contrôler en priorité.
