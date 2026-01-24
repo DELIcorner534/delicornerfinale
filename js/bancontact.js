@@ -1,9 +1,10 @@
 // Bancontact Payment Integration
 // This integrates with Mollie API which supports Bancontact payments
 
-const MOLLIE_API_KEY = 'YOUR_MOLLIE_API_KEY'; // Test key: test_xxx or Live key: live_xxx
+const MOLLIE_API_KEY = 'YOUR_MOLLIE_API_KEY'; // Deprecated: use backend API instead
 const PAYMENT_SUCCESS_URL = window.location.origin + '/payment-success.html';
 const PAYMENT_FAILURE_URL = window.location.origin + '/payment-failure.html';
+const MOLLIE_BACKEND_URL = 'https://delicorner-whatsapp.onrender.com/api/create-payment';
 
 // Process Bancontact payment via Mollie API
 async function processBancontactPayment(orderData) {
@@ -81,7 +82,7 @@ function processBancontactPaymentSimple(orderData) {
     
     // Create payment session on your backend
     // This should call your backend API which then creates a Mollie payment
-    fetch('/api/create-payment', {
+    fetch(MOLLIE_BACKEND_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -148,8 +149,8 @@ function processBancontactPaymentDemo(orderData) {
     }
 }
 
-// Use demo mode by default (replace with real function in production)
-window.processBancontactPayment = processBancontactPaymentDemo;
+// Use backend Mollie flow by default
+window.processBancontactPayment = processBancontactPaymentSimple;
 
 // Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {

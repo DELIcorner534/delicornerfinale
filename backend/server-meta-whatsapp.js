@@ -15,10 +15,17 @@ app.use(cors());
 app.use(express.json());
 
 // Configuration Meta WhatsApp Business API (à partir des variables d'environnement)
-const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID; // ID de votre numéro WhatsApp Business
-const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN; // Token d'accès Meta
-const META_API_VERSION = process.env.META_API_VERSION || 'v18.0'; // Version de l'API Meta
-const META_TEMPLATE_NAME = process.env.META_TEMPLATE_NAME; // Nom du template (optionnel)
+const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID;
+const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+const META_API_VERSION = process.env.META_API_VERSION || 'v18.0';
+const META_TEMPLATE_NAME = process.env.META_TEMPLATE_NAME; // ex: hello_world | delicorner_order
+const META_TEMPLATE_LANGUAGE = process.env.META_TEMPLATE_LANGUAGE || 'nl_BE';
+
+// Configuration Mollie (Bancontact)
+const MOLLIE_API_KEY = process.env.MOLLIE_API_KEY;
+const MOLLIE_REDIRECT_SUCCESS_URL = process.env.MOLLIE_REDIRECT_SUCCESS_URL;
+const MOLLIE_REDIRECT_FAILURE_URL = process.env.MOLLIE_REDIRECT_FAILURE_URL;
+const MOLLIE_WEBHOOK_URL = process.env.MOLLIE_WEBHOOK_URL;
 
 // URL de l'API Meta WhatsApp
 const META_API_URL = `https://graph.facebook.com/${META_API_VERSION}/${META_PHONE_NUMBER_ID}/messages`;
@@ -75,6 +82,17 @@ function formatOrderMessage(orderData, orderNumber) {
     return message;
 }
 
+// Envoyer un message Meta (template ou texte)
+async function sendMetaMessage(payload) {
+    const res = await axios.post(META_API_URL, payload, {
+        headers: {
+            'Authorization': `Bearer ${META_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    return res.data;
+}
+
 // Route pour envoyer un message WhatsApp
 app.post('/send-whatsapp', async (req, res) => {
     try {
@@ -85,7 +103,6 @@ app.post('/send-whatsapp', async (req, res) => {
         console.log('   Order Number:', orderNumber);
         console.log('   Message length:', message?.length || 0);
 
-        // Validation
         if (!to || !message) {
             console.error('❌ Validation échouée - to ou message manquant');
             return res.status(400).json({ 
@@ -94,52 +111,121 @@ app.post('/send-whatsapp', async (req, res) => {
             });
         }
 
-        // Vérifier que Meta est configuré
         if (!META_PHONE_NUMBER_ID || !META_ACCESS_TOKEN) {
             console.error('❌ Configuration Meta manquante');
-            console.error('   META_PHONE_NUMBER_ID:', META_PHONE_NUMBER_ID ? '✅' : '❌');
-            console.error('   META_ACCESS_TOKEN:', META_ACCESS_TOKEN ? '✅' : '❌');
             return res.status(500).json({ 
                 success: false, 
                 error: 'Configuration Meta WhatsApp manquante. Vérifiez vos variables d\'environnement.' 
             });
         }
 
-        // Formater le numéro (Meta nécessite le format international avec +)
-        const phoneNumber = to.startsWith('+') ? to : `+${to}`;
-        console.log('📱 Numéro formaté:', phoneNumber);
-        console.log('📱 Phone Number ID:', META_PHONE_NUMBER_ID);
-        console.log('📱 API URL:', META_API_URL);
+        const phoneNumber = String(to).replace(/\D/g, '');
+        const useTemplate = META_TEMPLATE_NAME && META_TEMPLATE_NAME.length > 0;
 
-        // Envoyer le message WhatsApp via Meta API
-        console.log('📤 Envoi du message via Meta API...');
-        const response = await axios.post(
-            META_API_URL,
-            {
+        if (!useTemplate) {
+            console.error('❌ META_TEMPLATE_NAME manquant. Sans template, Meta ne livre pas les messages.');
+            return res.status(400).json({
+                success: false,
+                error: 'Configurez META_TEMPLATE_NAME (ex: hello_world ou delicorner_order). Voir TEMPLATE_META_COMMANDES.md.'
+            });
+        }
+
+        {
+            // 1) Template ouvre la fenêtre 24h (obligatoire pour messages business → client)
+            const templatePayload = {
                 messaging_product: 'whatsapp',
                 recipient_type: 'individual',
                 to: phoneNumber,
-                type: 'text',
-                text: {
-                    body: message
+                type: 'template',
+                template: {
+                    name: META_TEMPLATE_NAME,
+                    language: { code: META_TEMPLATE_LANGUAGE }
                 }
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${META_ACCESS_TOKEN}`,
-                    'Content-Type': 'application/json'
+            };
+
+            if ((META_TEMPLATE_NAME === 'delicorner_order' || META_TEMPLATE_NAME === 'order_confirmation' || META_TEMPLATE_NAME === 'delicorner_order_full') && orderData) {
+                const name = (orderData.delivery?.name || 'N/A').substring(0, 80);
+                const orderNum = String(orderNumber || 'N/A');
+                const d = new Date();
+                d.setDate(d.getDate() + 1);
+                const dateStr = `${d.getDate()} ${['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()]} ${d.getFullYear()}`;
+
+                if (META_TEMPLATE_NAME === 'delicorner_order') {
+                    const total = typeof orderData.total === 'number'
+                        ? orderData.total.toFixed(2).replace('.', ',')
+                        : String(orderData.total || '0').replace('.', ',').substring(0, 20);
+                    templatePayload.template.components = [
+                        {
+                            type: 'body',
+                            parameters: [
+                                { type: 'text', text: orderNum },
+                                { type: 'text', text: name },
+                                { type: 'text', text: total }
+                            ]
+                        }
+                    ];
+                } else if (META_TEMPLATE_NAME === 'delicorner_order_full') {
+                    const total = typeof orderData.total === 'number'
+                        ? orderData.total.toFixed(2).replace('.', ',')
+                        : String(orderData.total || '0').replace('.', ',').substring(0, 20);
+                    let itemsText = formatItemsList(orderData.items || []);
+                    if (itemsText.length > 900) {
+                        itemsText = itemsText.slice(0, 900) + '...';
+                    }
+                    templatePayload.template.components = [
+                        {
+                            type: 'body',
+                            parameters: [
+                                { type: 'text', text: orderNum },
+                                { type: 'text', text: name },
+                                { type: 'text', text: orderData.delivery?.phone || 'N/A' },
+                                { type: 'text', text: orderData.delivery?.school || 'N/A' },
+                                { type: 'text', text: orderData.delivery?.class || 'N/A' },
+                                { type: 'text', text: total },
+                                { type: 'text', text: itemsText }
+                            ]
+                        }
+                    ];
+                } else {
+                    // order_confirmation (Order confirmation): Hi {{1}}, ... order number {{2}}, ... Estimated delivery: {{3}}
+                    templatePayload.template.components = [
+                        {
+                            type: 'body',
+                            parameters: [
+                                { type: 'text', text: name },
+                                { type: 'text', text: orderNum },
+                                { type: 'date_time', date_time: { fallback_value: dateStr } }
+                            ]
+                        }
+                    ];
                 }
             }
-        );
 
-        console.log('✅ Message WhatsApp envoyé via Meta avec succès!');
+            console.log('📤 Envoi template Meta:', META_TEMPLATE_NAME);
+            const templateRes = await sendMetaMessage(templatePayload);
+            const templateMsgId = templateRes.messages?.[0]?.id;
+            console.log('✅ Template envoyé:', templateMsgId);
+        }
+
+        // 2) Envoyer le message texte complet (détails commande)
+        const textPayload = {
+            messaging_product: 'whatsapp',
+            recipient_type: 'individual',
+            to: phoneNumber,
+            type: 'text',
+            text: { body: message }
+        };
+        console.log('📤 Envoi message texte Meta...');
+        const textRes = await sendMetaMessage(textPayload);
+        const textMsgId = textRes.messages?.[0]?.id;
+
+        console.log('✅ Message WhatsApp envoyé via Meta');
         console.log('   Commande:', `#${orderNumber || 'N/A'}`);
-        console.log('   Message ID:', response.data.messages[0].id);
-        console.log('   Status:', response.data.messages[0].status || 'sent');
+        console.log('   Message ID:', textMsgId);
 
         res.json({ 
             success: true, 
-            messageId: response.data.messages[0].id,
+            messageId: textMsgId,
             orderNumber: orderNumber,
             status: 'sent'
         });
@@ -170,6 +256,23 @@ app.post('/send-whatsapp', async (req, res) => {
     }
 });
 
+// Page d'accueil (évite "Cannot GET /" quand on visite la racine)
+app.get('/', (req, res) => {
+    res.type('html').send(`
+        <!DOCTYPE html>
+        <html><head><meta charset="utf-8"><title>Delicorner WhatsApp API</title></head>
+        <body style="font-family:sans-serif;max-width:600px;margin:2rem auto;padding:1rem;">
+            <h1>🍽️ Delicorner – Backend WhatsApp</h1>
+            <p>Ce serveur envoie les commandes par WhatsApp. Il n'y a pas de page à consulter ici.</p>
+            <ul>
+                <li><a href="/health">/health</a> – Vérifier que le backend fonctionne</li>
+                <li><strong>POST /send-whatsapp</strong> – Utilisé par le site pour envoyer les commandes</li>
+            </ul>
+            <p><a href="/health">→ Tester /health</a></p>
+        </body></html>
+    `);
+});
+
 // Route de santé (pour vérifier que le serveur fonctionne)
 app.get('/health', (req, res) => {
     res.json({ 
@@ -177,6 +280,56 @@ app.get('/health', (req, res) => {
         service: 'WhatsApp Order Service (Meta)',
         timestamp: new Date().toISOString()
     });
+});
+
+// Créer un paiement Mollie (Bancontact)
+app.post('/api/create-payment', async (req, res) => {
+    try {
+        if (!MOLLIE_API_KEY || !MOLLIE_REDIRECT_SUCCESS_URL || !MOLLIE_REDIRECT_FAILURE_URL) {
+            return res.status(500).json({
+                error: 'Configuration Mollie manquante (MOLLIE_API_KEY / REDIRECT URLs).'
+            });
+        }
+
+        const { amount, items, delivery } = req.body || {};
+        if (typeof amount !== 'number' || !items || !delivery) {
+            return res.status(400).json({ error: 'Données de paiement invalides.' });
+        }
+
+        const paymentData = {
+            amount: {
+                currency: 'EUR',
+                value: amount.toFixed(2)
+            },
+            description: `Commande Delicorner - ${items.length} article(s)`,
+            redirectUrl: MOLLIE_REDIRECT_SUCCESS_URL,
+            webhookUrl: MOLLIE_WEBHOOK_URL || undefined,
+            method: 'bancontact',
+            metadata: {
+                customer_name: delivery.name || '',
+                customer_phone: delivery.phone || '',
+                school: delivery.school || '',
+                class: delivery.class || ''
+            }
+        };
+
+        const response = await axios.post('https://api.mollie.com/v2/payments', paymentData, {
+            headers: {
+                Authorization: `Bearer ${MOLLIE_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const checkoutUrl = response.data?._links?.checkout?.href;
+        if (!checkoutUrl) {
+            return res.status(500).json({ error: 'URL de paiement introuvable.' });
+        }
+
+        res.json({ checkout_url: checkoutUrl });
+    } catch (error) {
+        console.error('❌ Erreur Mollie:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Erreur lors de la création du paiement Mollie.' });
+    }
 });
 
 // Route pour obtenir les informations de configuration (sans exposer les secrets)

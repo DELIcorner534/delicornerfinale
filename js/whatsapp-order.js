@@ -6,10 +6,9 @@ const WHATSAPP_PHONE = '32451032356'; // Numéro WhatsApp de la sandwicherie (fo
 
 // SOLUTION RECOMMANDÉE : Twilio WhatsApp Business API (via backend)
 // ⚠️ ChatAPI a fermé - Utilisez maintenant Twilio via le backend
-// Pour le développement local: 'http://localhost:3000/send-whatsapp'
-// Pour la production: 'https://votre-backend.herokuapp.com/send-whatsapp'
-const WHATSAPP_API_URL = 'http://localhost:3000/send-whatsapp'; // URL de votre backend Twilio
-// ⚠️ Changez cette URL après avoir déployé votre backend en production
+// Développement local: 'http://localhost:3000/send-whatsapp'
+// Production (Render): backend hébergé sur Render
+const WHATSAPP_API_URL = 'https://delicorner-whatsapp.onrender.com/send-whatsapp';
 
 // Option 2: Webhook (Zapier, Make.com, etc.)
 const WHATSAPP_WEBHOOK_URL = 'YOUR_WEBHOOK_URL'; // URL de votre webhook
@@ -166,67 +165,62 @@ async function sendOrderViaWhatsApp(orderData) {
         };
         
         let messageSent = false;
+        let apiErrorMsg = null;
+        const apiConfigured = WHATSAPP_API_URL && WHATSAPP_API_URL !== 'YOUR_WHATSAPP_API_ENDPOINT' && WHATSAPP_API_URL.includes('http');
         
-        // Option 1: Envoyer via API backend Twilio (RECOMMANDÉ)
-        console.log('🔍 Vérification de WHATSAPP_API_URL:', WHATSAPP_API_URL);
-        if (WHATSAPP_API_URL && WHATSAPP_API_URL !== 'YOUR_WHATSAPP_API_ENDPOINT' && WHATSAPP_API_URL.includes('http')) {
-            console.log('✅ Envoi via API backend Twilio...');
+        if (apiConfigured) {
+            console.log('✅ Envoi via API backend...');
             try {
-                console.log('📤 Envoi de la requête à:', WHATSAPP_API_URL);
-                console.log('📤 Données envoyées:', { to: WHATSAPP_PHONE, message: message.substring(0, 100) + '...', orderNumber });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 s (Render spin-up)
                 const response = await fetch(WHATSAPP_API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         to: WHATSAPP_PHONE,
                         message: message,
                         orderNumber: orderNumber,
                         orderData: orderWithNumber
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('✅ Message WhatsApp envoyé via API backend:', result);
-                    messageSent = true;
+                    if (result.success) {
+                        messageSent = true;
+                        console.log('✅ Message WhatsApp envoyé:', result.messageId || result.orderNumber);
+                    } else {
+                        apiErrorMsg = result.error || 'Erreur backend';
+                    }
                 } else {
-                    const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-                    console.error('❌ Erreur API backend - Status:', response.status);
-                    console.error('❌ Erreur API backend - Détails:', errorData);
-                    throw new Error(errorData.error || 'Erreur lors de l\'envoi via API');
+                    const err = await response.json().catch(() => ({}));
+                    apiErrorMsg = err.error || 'Erreur ' + response.status;
                 }
-            } catch (apiError) {
-                console.error('❌ Erreur API backend:', apiError);
-                console.error('❌ Détails de l\'erreur:', {
-                    message: apiError.message,
-                    stack: apiError.stack,
-                    name: apiError.name
-                });
+            } catch (e) {
+                apiErrorMsg = e.name === 'AbortError'
+                    ? 'Délai dépassé (90 s). Le backend Render peut être en réveil. Réessayez.'
+                    : (e.message || 'Erreur réseau.');
+                console.error('❌ Erreur envoi API:', apiErrorMsg);
             }
         }
         
-        // Option 3: Si aucune API n'est configurée, utiliser webhook ou sauvegarder
-        if (!messageSent) {
-            console.log('⚠️ Aucune API configurée, utilisation du fallback...');
-            await sendOrderViaWhatsAppFallback(message, orderWithNumber);
-        } else {
-            console.log('✅ Message envoyé avec succès via API backend');
+        if (!messageSent && apiConfigured && apiErrorMsg) {
+            return { success: false, error: apiErrorMsg };
         }
         
-        // Sauvegarder dans localStorage pour la page de succès
+        if (!messageSent && apiConfigured) {
+            return { success: false, error: 'Envoi WhatsApp échoué. Réessayez ou ouvrez le site via Live Server / npx serve (pas file://).' };
+        }
+        
+        if (!messageSent) {
+            await sendOrderViaWhatsAppFallback(message, orderWithNumber);
+        }
+        
         localStorage.setItem('pending_order', JSON.stringify(orderWithNumber));
-        localStorage.setItem('completed_order', JSON.stringify(orderWithNumber)); // Pour la page de succès
+        localStorage.setItem('completed_order', JSON.stringify(orderWithNumber));
         
-        console.log('💾 Commande sauvegardée dans localStorage:', {
-            orderNumber: orderWithNumber.orderNumber,
-            verificationCode: orderWithNumber.verificationCode,
-            total: orderWithNumber.total,
-            messageLength: message.length
-        });
-        
-        // Sauvegarder dans l'historique des commandes si l'utilisateur est connecté
         if (window.auth && window.auth.isLoggedIn()) {
             window.auth.saveOrder({
                 items: orderData.items,
@@ -236,10 +230,7 @@ async function sendOrderViaWhatsApp(orderData) {
             });
         }
         
-        return {
-            success: true,
-            orderNumber: orderNumber
-        };
+        return { success: true, orderNumber: orderNumber };
         
     } catch (error) {
         console.error('Erreur lors de l\'envoi WhatsApp:', error);
