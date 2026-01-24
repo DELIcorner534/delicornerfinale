@@ -32,6 +32,7 @@ const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const META_API_VERSION = process.env.META_API_VERSION || 'v18.0';
 const META_TEMPLATE_NAME = process.env.META_TEMPLATE_NAME; // ex: hello_world | delicorner_order
 const META_TEMPLATE_LANGUAGE = process.env.META_TEMPLATE_LANGUAGE || 'nl_BE';
+const META_ORDER_TO = process.env.META_ORDER_TO || ''; // Numéro WhatsApp shop (commandes)
 
 // Configuration Mollie (Bancontact)
 const MOLLIE_API_KEY = process.env.MOLLIE_API_KEY;
@@ -62,6 +63,21 @@ function formatItemsList(items) {
         
         return itemText;
     }).join('\n');
+}
+
+function generateVerificationCode(orderData, orderNumber) {
+    const s = JSON.stringify({
+        orderNumber,
+        total: orderData.total,
+        items: (orderData.items || []).map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+        ts: Date.now()
+    });
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h = h & h;
+    }
+    return Math.abs(h).toString(36).toUpperCase().substring(0, 8).padStart(8, '0');
 }
 
 // Fonction pour formater le message de commande
@@ -105,6 +121,39 @@ async function sendMetaMessage(payload) {
     return res.data;
 }
 
+// Envoyer template + message texte (partagé send-whatsapp / confirm-and-send)
+async function sendTemplateAndText(phoneNumber, message, orderData, orderNumber) {
+    const ph = String(phoneNumber).replace(/\D/g, '');
+    const templatePayload = {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: ph,
+        type: 'template',
+        template: { name: META_TEMPLATE_NAME, language: { code: META_TEMPLATE_LANGUAGE } }
+    };
+    if ((META_TEMPLATE_NAME === 'delicorner_order' || META_TEMPLATE_NAME === 'order_confirmation' || META_TEMPLATE_NAME === 'delicorner_order_full') && orderData) {
+        const name = (orderData.delivery?.name || 'N/A').substring(0, 80);
+        const orderNum = String(orderNumber || 'N/A');
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        const dateStr = `${d.getDate()} ${['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()]} ${d.getFullYear()}`;
+        if (META_TEMPLATE_NAME === 'delicorner_order') {
+            const total = typeof orderData.total === 'number' ? orderData.total.toFixed(2).replace('.', ',') : String(orderData.total || '0').replace('.', ',').substring(0, 20);
+            templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: orderNum }, { type: 'text', text: name }, { type: 'text', text: total }] }];
+        } else if (META_TEMPLATE_NAME === 'delicorner_order_full') {
+            const total = typeof orderData.total === 'number' ? orderData.total.toFixed(2).replace('.', ',') : String(orderData.total || '0').replace('.', ',').substring(0, 20);
+            let itemsText = formatItemsList(orderData.items || []);
+            if (itemsText.length > 900) itemsText = itemsText.slice(0, 900) + '...';
+            templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: orderNum }, { type: 'text', text: name }, { type: 'text', text: orderData.delivery?.phone || 'N/A' }, { type: 'text', text: orderData.delivery?.school || 'N/A' }, { type: 'text', text: orderData.delivery?.class || 'N/A' }, { type: 'text', text: total }, { type: 'text', text: itemsText }] }];
+        } else {
+            templatePayload.template.components = [{ type: 'body', parameters: [{ type: 'text', text: name }, { type: 'text', text: orderNum }, { type: 'date_time', date_time: { fallback_value: dateStr } }] }];
+        }
+    }
+    await sendMetaMessage(templatePayload);
+    const textRes = await sendMetaMessage({ messaging_product: 'whatsapp', recipient_type: 'individual', to: ph, type: 'text', text: { body: message } });
+    return textRes.messages?.[0]?.id;
+}
+
 // Route pour envoyer un message WhatsApp
 app.post('/send-whatsapp', async (req, res) => {
     try {
@@ -132,105 +181,14 @@ app.post('/send-whatsapp', async (req, res) => {
         }
 
         const phoneNumber = String(to).replace(/\D/g, '');
-        const useTemplate = META_TEMPLATE_NAME && META_TEMPLATE_NAME.length > 0;
-
-        if (!useTemplate) {
-            console.error('❌ META_TEMPLATE_NAME manquant. Sans template, Meta ne livre pas les messages.');
+        if (!META_TEMPLATE_NAME || !META_TEMPLATE_NAME.length) {
             return res.status(400).json({
                 success: false,
                 error: 'Configurez META_TEMPLATE_NAME (ex: hello_world ou delicorner_order). Voir TEMPLATE_META_COMMANDES.md.'
             });
         }
-
-        {
-            // 1) Template ouvre la fenêtre 24h (obligatoire pour messages business → client)
-            const templatePayload = {
-                messaging_product: 'whatsapp',
-                recipient_type: 'individual',
-                to: phoneNumber,
-                type: 'template',
-                template: {
-                    name: META_TEMPLATE_NAME,
-                    language: { code: META_TEMPLATE_LANGUAGE }
-                }
-            };
-
-            if ((META_TEMPLATE_NAME === 'delicorner_order' || META_TEMPLATE_NAME === 'order_confirmation' || META_TEMPLATE_NAME === 'delicorner_order_full') && orderData) {
-                const name = (orderData.delivery?.name || 'N/A').substring(0, 80);
-                const orderNum = String(orderNumber || 'N/A');
-                const d = new Date();
-                d.setDate(d.getDate() + 1);
-                const dateStr = `${d.getDate()} ${['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()]} ${d.getFullYear()}`;
-
-                if (META_TEMPLATE_NAME === 'delicorner_order') {
-                    const total = typeof orderData.total === 'number'
-                        ? orderData.total.toFixed(2).replace('.', ',')
-                        : String(orderData.total || '0').replace('.', ',').substring(0, 20);
-                    templatePayload.template.components = [
-                        {
-                            type: 'body',
-                            parameters: [
-                                { type: 'text', text: orderNum },
-                                { type: 'text', text: name },
-                                { type: 'text', text: total }
-                            ]
-                        }
-                    ];
-                } else if (META_TEMPLATE_NAME === 'delicorner_order_full') {
-                    const total = typeof orderData.total === 'number'
-                        ? orderData.total.toFixed(2).replace('.', ',')
-                        : String(orderData.total || '0').replace('.', ',').substring(0, 20);
-                    let itemsText = formatItemsList(orderData.items || []);
-                    if (itemsText.length > 900) {
-                        itemsText = itemsText.slice(0, 900) + '...';
-                    }
-                    templatePayload.template.components = [
-                        {
-                            type: 'body',
-                            parameters: [
-                                { type: 'text', text: orderNum },
-                                { type: 'text', text: name },
-                                { type: 'text', text: orderData.delivery?.phone || 'N/A' },
-                                { type: 'text', text: orderData.delivery?.school || 'N/A' },
-                                { type: 'text', text: orderData.delivery?.class || 'N/A' },
-                                { type: 'text', text: total },
-                                { type: 'text', text: itemsText }
-                            ]
-                        }
-                    ];
-                } else {
-                    // order_confirmation (Order confirmation): Hi {{1}}, ... order number {{2}}, ... Estimated delivery: {{3}}
-                    templatePayload.template.components = [
-                        {
-                            type: 'body',
-                            parameters: [
-                                { type: 'text', text: name },
-                                { type: 'text', text: orderNum },
-                                { type: 'date_time', date_time: { fallback_value: dateStr } }
-                            ]
-                        }
-                    ];
-                }
-            }
-
-            console.log('📤 Envoi template Meta:', META_TEMPLATE_NAME);
-            const templateRes = await sendMetaMessage(templatePayload);
-            const templateMsgId = templateRes.messages?.[0]?.id;
-            console.log('✅ Template envoyé:', templateMsgId);
-        }
-
-        // 2) Envoyer le message texte complet (détails commande)
-        const textPayload = {
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: phoneNumber,
-            type: 'text',
-            text: { body: message }
-        };
-        console.log('📤 Envoi message texte Meta...');
-        const textRes = await sendMetaMessage(textPayload);
-        const textMsgId = textRes.messages?.[0]?.id;
-
+        console.log('📤 Envoi template + texte Meta...');
+        const textMsgId = await sendTemplateAndText(phoneNumber, message, orderData, orderNumber);
         console.log('✅ Message WhatsApp envoyé via Meta');
         console.log('   Commande:', `#${orderNumber || 'N/A'}`);
         console.log('   Message ID:', textMsgId);
@@ -321,6 +279,39 @@ app.get('/api/payment-by-token', (req, res) => {
     res.json({ payment_id: entry.payment_id });
 });
 
+// Après paiement réussi : vérifier Mollie paid puis envoyer WhatsApp (commande uniquement après payé)
+app.post('/api/confirm-and-send-whatsapp', async (req, res) => {
+    try {
+        const { token } = req.body || {};
+        if (!token) return res.status(400).json({ error: 'Paramètre token manquant.', success: false });
+        const entry = paymentTokens.get(token);
+        if (!entry || !entry.payment_id || !entry.order) return res.status(404).json({ error: 'Token invalide ou expiré.', success: false });
+        const { payment_id, order } = entry;
+        const r = await axios.get(`https://api.mollie.com/v2/payments/${payment_id}`, {
+            headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` }
+        });
+        const status = (r.data?.status || '').toLowerCase();
+        if (status !== 'paid') return res.status(400).json({ error: 'Paiement non payé.', success: false });
+        if (!META_ORDER_TO || !META_PHONE_NUMBER_ID || !META_ACCESS_TOKEN || !META_TEMPLATE_NAME) {
+            return res.status(500).json({ error: 'Config Meta / META_ORDER_TO manquante.', success: false });
+        }
+        const orderNumber = order.orderNumber || String(Date.now()).slice(-6);
+        const orderData = {
+            ...order,
+            delivery: order.delivery || {},
+            verificationCode: generateVerificationCode(order, orderNumber),
+            payment_method: 'bancontact'
+        };
+        const message = formatOrderMessage(orderData, orderNumber);
+        await sendTemplateAndText(META_ORDER_TO, message, orderData, orderNumber);
+        console.log('✅ WhatsApp envoyé après paiement (confirm-and-send): #' + orderNumber);
+        res.json({ success: true, orderNumber });
+    } catch (e) {
+        console.error('❌ confirm-and-send-whatsapp:', e.response?.data || e.message);
+        res.status(500).json({ error: e.message || 'Erreur envoi WhatsApp après paiement.', success: false });
+    }
+});
+
 // Créer un paiement Mollie (Bancontact)
 app.post('/api/create-payment', async (req, res) => {
     try {
@@ -330,10 +321,11 @@ app.post('/api/create-payment', async (req, res) => {
             });
         }
 
-        const { amount, items, delivery } = req.body || {};
+        const { amount, items, delivery, orderNumber } = req.body || {};
         if (typeof amount !== 'number' || !items || !delivery) {
             return res.status(400).json({ error: 'Données de paiement invalides.' });
         }
+        const order = { items, delivery, total: amount, orderNumber: orderNumber || null };
 
         const token = crypto.randomBytes(16).toString('hex');
         const base = MOLLIE_REDIRECT_SUCCESS_URL;
@@ -369,7 +361,7 @@ app.post('/api/create-payment', async (req, res) => {
             return res.status(500).json({ error: 'URL de paiement introuvable.' });
         }
 
-        paymentTokens.set(token, { payment_id: paymentId, createdAt: Date.now() });
+        paymentTokens.set(token, { payment_id: paymentId, order, createdAt: Date.now() });
 
         res.json({ checkout_url: checkoutUrl, payment_id: paymentId || null, return_token: token });
     } catch (error) {
