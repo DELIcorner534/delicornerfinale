@@ -94,6 +94,13 @@ async function processBancontactPaymentSimple(orderData, opts = {}) {
     const data = await res.json().catch(() => ({}));
     
     if (data.checkout_url) {
+        if (data.payment_id) {
+            try { sessionStorage.setItem('mollie_payment_id', data.payment_id); } catch (_) {}
+            try {
+                var d = '.delicornerhalle.be';
+                document.cookie = 'mollie_payment_id=' + encodeURIComponent(data.payment_id) + '; path=/; domain=' + d + '; max-age=600; SameSite=Lax';
+            } catch (_) {}
+        }
         if (window.delicornerCart) window.delicornerCart.clearCart();
         window.location.href = data.checkout_url;
         return;

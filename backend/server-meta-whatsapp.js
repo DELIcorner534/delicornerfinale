@@ -5,7 +5,19 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const crypto = require('crypto');
 require('dotenv').config();
+
+// Token -> payment_id (pour payment-return via ?t=)
+const paymentTokens = new Map();
+const TOKEN_TTL_MS = 30 * 60 * 1000; // 30 min
+function cleanupTokens() {
+    const now = Date.now();
+    for (const [k, v] of paymentTokens.entries()) {
+        if (now - (v.createdAt || 0) > TOKEN_TTL_MS) paymentTokens.delete(k);
+    }
+}
+setInterval(cleanupTokens, 5 * 60 * 1000);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -282,6 +294,33 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Vérifier le statut d'un paiement Mollie (pour payment-return)
+app.get('/api/payment-status', async (req, res) => {
+    try {
+        const id = req.query.id;
+        if (!id || !MOLLIE_API_KEY) {
+            return res.status(400).json({ error: 'Paramètre id manquant ou Mollie non configuré.' });
+        }
+        const r = await axios.get(`https://api.mollie.com/v2/payments/${id}`, {
+            headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` }
+        });
+        const status = r.data?.status || 'unknown';
+        res.json({ status });
+    } catch (e) {
+        console.error('❌ Erreur payment-status:', e.response?.data || e.message);
+        res.status(500).json({ error: 'Impossible de vérifier le paiement.', status: 'unknown' });
+    }
+});
+
+// Récupérer payment_id à partir du token (pour payment-return?t=xxx)
+app.get('/api/payment-by-token', (req, res) => {
+    const t = req.query.t;
+    if (!t) return res.status(400).json({ error: 'Paramètre t manquant.' });
+    const entry = paymentTokens.get(t);
+    if (!entry || !entry.payment_id) return res.status(404).json({ error: 'Token invalide ou expiré.' });
+    res.json({ payment_id: entry.payment_id });
+});
+
 // Créer un paiement Mollie (Bancontact)
 app.post('/api/create-payment', async (req, res) => {
     try {
@@ -296,13 +335,17 @@ app.post('/api/create-payment', async (req, res) => {
             return res.status(400).json({ error: 'Données de paiement invalides.' });
         }
 
+        const token = crypto.randomBytes(16).toString('hex');
+        const base = MOLLIE_REDIRECT_SUCCESS_URL;
+        const redirectUrl = base + (base.includes('?') ? '&' : '?') + 't=' + token;
+
         const paymentData = {
             amount: {
                 currency: 'EUR',
                 value: amount.toFixed(2)
             },
             description: `Commande Delicorner - ${items.length} article(s)`,
-            redirectUrl: MOLLIE_REDIRECT_SUCCESS_URL,
+            redirectUrl,
             webhookUrl: MOLLIE_WEBHOOK_URL || undefined,
             method: 'bancontact',
             metadata: {
@@ -321,11 +364,14 @@ app.post('/api/create-payment', async (req, res) => {
         });
 
         const checkoutUrl = response.data?._links?.checkout?.href;
+        const paymentId = response.data?.id;
         if (!checkoutUrl) {
             return res.status(500).json({ error: 'URL de paiement introuvable.' });
         }
 
-        res.json({ checkout_url: checkoutUrl });
+        paymentTokens.set(token, { payment_id: paymentId, createdAt: Date.now() });
+
+        res.json({ checkout_url: checkoutUrl, payment_id: paymentId || null, return_token: token });
     } catch (error) {
         console.error('❌ Erreur Mollie:', error.response?.data || error.message);
         res.status(500).json({ error: 'Erreur lors de la création du paiement Mollie.' });
