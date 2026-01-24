@@ -239,9 +239,11 @@ app.get('/', (req, res) => {
             <p>Ce serveur envoie les commandes par WhatsApp. Il n'y a pas de page à consulter ici.</p>
             <ul>
                 <li><a href="/health">/health</a> – Vérifier que le backend fonctionne</li>
-                <li><strong>POST /send-whatsapp</strong> – Utilisé par le site pour envoyer les commandes</li>
+                <li><a href="/config">/config</a> – Config Meta (sans secrets)</li>
+                <li><a href="/api/whatsapp-status">/api/whatsapp-status</a> – Diagnostic WhatsApp (META_ORDER_TO, template, etc.)</li>
+                <li><strong>POST /send-whatsapp</strong> – Envoi commandes</li>
             </ul>
-            <p><a href="/health">→ Tester /health</a></p>
+            <p><a href="/health">→ /health</a> &nbsp; <a href="/api/whatsapp-status">→ /api/whatsapp-status</a></p>
         </body></html>
     `);
 });
@@ -379,6 +381,17 @@ app.get('/config', (req, res) => {
         whatsappConfigured: !!(META_PHONE_NUMBER_ID && META_ACCESS_TOKEN),
         provider: 'Meta WhatsApp Business API',
         port: PORT
+    });
+});
+
+// Diagnostic WhatsApp (pour dépanner "pas de message reçu")
+app.get('/api/whatsapp-status', (req, res) => {
+    res.json({
+        metaOk: !!(META_PHONE_NUMBER_ID && META_ACCESS_TOKEN),
+        orderToSet: !!META_ORDER_TO,
+        templateName: META_TEMPLATE_NAME || null,
+        templateLanguage: META_TEMPLATE_LANGUAGE || null,
+        hint: 'Vérifiez Render Env (META_ORDER_TO, META_TEMPLATE_*), template Meta approuvé, et numéro "To" dans Meta API Setup.'
     });
 });
 
