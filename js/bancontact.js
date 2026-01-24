@@ -79,7 +79,7 @@ async function processBancontactPayment(orderData) {
 // opts: { skipStoreOrder: bool } — si true, ne pas écraser pending_order (WhatsApp déjà stocké)
 async function processBancontactPaymentSimple(orderData, opts = {}) {
     if (!opts.skipStoreOrder) {
-        localStorage.setItem('pending_order', JSON.stringify(orderData));
+        localStorage.setItem('pending_order', JSON.stringify({ ...orderData, orderNumber: orderData.orderNumber }));
     }
     
     const res = await fetch(MOLLIE_BACKEND_URL, {
@@ -88,7 +88,8 @@ async function processBancontactPaymentSimple(orderData, opts = {}) {
         body: JSON.stringify({
             amount: orderData.total,
             items: orderData.items,
-            delivery: orderData.delivery
+            delivery: orderData.delivery,
+            orderNumber: orderData.orderNumber || null
         })
     });
     const data = await res.json().catch(() => ({}));

@@ -55,22 +55,30 @@
                 .then(function (data) {
                     var id = data.payment_id || null;
                     console.log('[payment-return] payment_id (token):', id ? 'ok' : 'MANQUANT');
-                    if (id) { cb(id); return; }
-                    cb(getPaymentIdFromStorage());
+                    if (id) { cb(id, token); return; }
+                    cb(getPaymentIdFromStorage(), null);
                 })
                 .catch(function (err) {
                     console.warn('[payment-return] Erreur payment-by-token:', err.message || err, '→ fallback storage');
-                    cb(getPaymentIdFromStorage());
+                    cb(getPaymentIdFromStorage(), null);
                 });
             return;
         }
         var id = getPaymentIdFromStorage();
         console.log('[payment-return] payment_id (storage):', id ? 'ok' : 'MANQUANT', '| origin:', window.location.origin);
-        cb(id);
+        cb(id, null);
+    }
+
+    function postJson(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(function (r) { return r.json().catch(function () { return {}; }); });
     }
 
     function run(retry) {
-        resolvePaymentId(function (paymentId) {
+        resolvePaymentId(function (paymentId, token) {
             if (!paymentId) {
                 console.warn('[payment-return] Pas de payment_id → échec');
                 redirectTo(FAILURE_URL);
@@ -81,6 +89,18 @@
                     var status = (data.status || '').toLowerCase();
                     console.log('[payment-return] status:', status, '| paid?', status === 'paid');
                     if (status === 'paid') {
+                        if (token) {
+                            console.log('[payment-return] Envoi WhatsApp après paiement (confirm-and-send)...');
+                            return postJson(API_BASE + '/api/confirm-and-send-whatsapp', { token: token })
+                                .then(function (res) {
+                                    if (res.success) console.log('[payment-return] WhatsApp envoyé');
+                                    redirectTo(SUCCESS_URL);
+                                })
+                                .catch(function (err) {
+                                    console.warn('[payment-return] Erreur confirm-and-send:', err.message || err);
+                                    redirectTo(SUCCESS_URL);
+                                });
+                        }
                         redirectTo(SUCCESS_URL);
                     } else {
                         redirectTo(FAILURE_URL);

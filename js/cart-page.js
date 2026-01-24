@@ -238,18 +238,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if (typeof processWhatsAppOrder !== 'function') {
-                alert('Le système de commande n\'est pas configuré. Veuillez recharger la page.');
-                return;
-            }
-
             const isBancontact = paymentMethod.value === 'bancontact';
 
             if (isBancontact) {
-                const result = await processWhatsAppOrder(formData, { skipRedirect: true });
-                if (!result.success) return;
+                if (typeof processBancontactPayment !== 'function') {
+                    alert('Le paiement Bancontact n\'est pas configuré. Rechargez la page.');
+                    return;
+                }
+                formData.orderNumber = (window.orderNumberManager && typeof window.orderNumberManager.getNextOrderNumber === 'function')
+                    ? window.orderNumberManager.getNextOrderNumber()
+                    : String(Date.now()).slice(-6);
                 try {
-                    await processBancontactPayment(formData, { skipStoreOrder: true });
+                    await processBancontactPayment(formData, { skipStoreOrder: false });
                 } catch (err) {
                     console.error('Erreur Bancontact:', err);
                     const btn = document.getElementById('checkoutBtn');
@@ -259,6 +259,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            if (typeof processWhatsAppOrder !== 'function') {
+                alert('Le système de commande n\'est pas configuré. Veuillez recharger la page.');
+                return;
+            }
             processWhatsAppOrder(formData).catch(function(error) {
                 console.error('❌ Erreur envoi commande:', error);
                 alert('Une erreur est survenue. Veuillez réessayer.\n\n' + (error.message || ''));
