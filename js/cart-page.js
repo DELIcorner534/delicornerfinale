@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkoutForm = document.getElementById('checkoutForm');
     if (checkoutForm) {
         console.log('✅ Formulaire de checkout trouvé, ajout de l\'événement submit...');
-        checkoutForm.addEventListener('submit', function(e) {
+        checkoutForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             console.log('📝 Formulaire soumis !');
             
@@ -189,16 +189,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Check if orders are allowed at this time
             const timeCheck = isOrderTimeAllowed();
             if (!timeCheck.allowed) {
                 alert(timeCheck.message);
                 return;
             }
             
-            console.log('✅ Validation du temps OK, préparation des données...');
-
-            // Récupérer les valeurs du formulaire
             const deliveryName = document.getElementById('deliveryName');
             const deliveryClass = document.getElementById('deliveryClass');
             const deliverySchool = document.getElementById('deliverySchool');
@@ -206,19 +202,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const deliveryNotes = document.getElementById('deliveryNotes');
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
             
-            // Validation des champs
             if (!deliveryName || !deliveryName.value.trim()) {
                 alert('Veuillez entrer votre nom.');
                 deliveryName?.focus();
                 return;
             }
-            
             if (!deliveryPhone || !deliveryPhone.value.trim()) {
                 alert('Veuillez entrer votre numéro de téléphone.');
                 deliveryPhone?.focus();
                 return;
             }
-            
             if (!paymentMethod) {
                 alert('Veuillez sélectionner une méthode de paiement.');
                 return;
@@ -232,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     class: deliveryClass?.value.trim() || '',
                     school: deliverySchool?.value || '',
                     phone: deliveryPhone.value.trim(),
-                    // Temporairement désactivé
                     address: '',
                     postal: '',
                     city: '',
@@ -240,31 +232,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 payment_method: paymentMethod.value
             };
-            
-            console.log('📝 Données du formulaire préparées:', formData);
 
-            // Validation des champs requis
             if (!formData.delivery.name || !formData.delivery.phone) {
                 alert('Veuillez remplir tous les champs obligatoires (Nom et Téléphone).');
                 return;
             }
 
-            // Envoyer la commande par WhatsApp
-            console.log('🔍 Vérification de processWhatsAppOrder...', typeof processWhatsAppOrder);
-            if (typeof processWhatsAppOrder === 'function') {
-                console.log('✅ processWhatsAppOrder trouvé, envoi de la commande...', formData);
-                processWhatsAppOrder(formData).catch(error => {
-                    console.error('❌ Erreur lors de l\'envoi de la commande:', error);
-                    console.error('Stack:', error.stack);
-                    alert('Une erreur est survenue lors de l\'envoi de la commande. Veuillez réessayer.\n\nErreur: ' + error.message);
-                });
-            } else {
-                console.error('❌ WhatsApp order handler not found. processWhatsAppOrder:', typeof processWhatsAppOrder);
-                console.log('🔍 Fonctions disponibles sur window:', Object.keys(window).filter(k => k.includes('WhatsApp') || k.includes('Order') || k.includes('process')));
-                console.log('🔍 Scripts chargés:', Array.from(document.querySelectorAll('script[src]')).map(s => s.src));
-                const errorMsg = 'Le système de commande n\'est pas configuré. Veuillez recharger la page.\n\nSi le problème persiste, vérifiez la console (F12) pour plus de détails.';
-                alert(errorMsg);
+            if (typeof processWhatsAppOrder !== 'function') {
+                alert('Le système de commande n\'est pas configuré. Veuillez recharger la page.');
+                return;
             }
+
+            const isBancontact = paymentMethod.value === 'bancontact';
+
+            if (isBancontact) {
+                const result = await processWhatsAppOrder(formData, { skipRedirect: true });
+                if (!result.success) return;
+                try {
+                    await processBancontactPayment(formData, { skipStoreOrder: true });
+                } catch (err) {
+                    console.error('Erreur Bancontact:', err);
+                    const btn = document.getElementById('checkoutBtn');
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<span>✅ Valider et envoyer la commande</span><span class="checkout-total">€' + formData.total.toFixed(2).replace('.', ',') + '</span>'; }
+                    alert('Impossible de rediriger vers Bancontact. ' + (err.message || 'Veuillez réessayer.'));
+                }
+                return;
+            }
+
+            processWhatsAppOrder(formData).catch(function(error) {
+                console.error('❌ Erreur envoi commande:', error);
+                alert('Une erreur est survenue. Veuillez réessayer.\n\n' + (error.message || ''));
+            });
         });
     }
 });

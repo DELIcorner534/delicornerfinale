@@ -75,36 +75,30 @@ async function processBancontactPayment(orderData) {
     }
 }
 
-// Alternative: Simple redirect to payment page (if using Mollie Checkout)
-function processBancontactPaymentSimple(orderData) {
-    // Store order data
-    localStorage.setItem('pending_order', JSON.stringify(orderData));
+// Alternative: Simple redirect to Mollie (backend creates payment)
+// opts: { skipStoreOrder: bool } — si true, ne pas écraser pending_order (WhatsApp déjà stocké)
+async function processBancontactPaymentSimple(orderData, opts = {}) {
+    if (!opts.skipStoreOrder) {
+        localStorage.setItem('pending_order', JSON.stringify(orderData));
+    }
     
-    // Create payment session on your backend
-    // This should call your backend API which then creates a Mollie payment
-    fetch(MOLLIE_BACKEND_URL, {
+    const res = await fetch(MOLLIE_BACKEND_URL, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             amount: orderData.total,
             items: orderData.items,
             delivery: orderData.delivery
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.checkout_url) {
-            window.location.href = data.checkout_url;
-        } else {
-            throw new Error('No checkout URL received');
-        }
-    })
-    .catch(error => {
-        console.error('Payment error:', error);
-        alert('Une erreur est survenue. Veuillez réessayer.');
     });
+    const data = await res.json().catch(() => ({}));
+    
+    if (data.checkout_url) {
+        if (window.delicornerCart) window.delicornerCart.clearCart();
+        window.location.href = data.checkout_url;
+        return;
+    }
+    throw new Error(data.error || 'Pas d\'URL de paiement reçue.');
 }
 
 // Fallback function for demo/testing without actual payment processing

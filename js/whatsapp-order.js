@@ -298,55 +298,46 @@ async function sendOrderViaWhatsAppFallback(message, orderWithNumber) {
 }
 
 // Fonction principale pour traiter la commande
-async function processWhatsAppOrder(orderData) {
-    console.log('🚀 processWhatsAppOrder appelé avec:', orderData);
-    
+// opts: { skipRedirect: bool } — si true, ne redirige pas (ex. avant Bancontact)
+async function processWhatsAppOrder(orderData, opts = {}) {
+    const skipRedirect = !!opts.skipRedirect;
+    console.log('🚀 processWhatsAppOrder appelé avec:', orderData, skipRedirect ? '(skipRedirect)' : '');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const originalText = checkoutBtn ? checkoutBtn.innerHTML : '';
     try {
-        // Afficher un message de chargement
-        const checkoutBtn = document.getElementById('checkoutBtn');
         if (checkoutBtn) {
-            const originalText = checkoutBtn.innerHTML;
             checkoutBtn.disabled = true;
             checkoutBtn.innerHTML = '<span>⏳ Envoi de la commande...</span>';
-            
-            // Envoyer la commande
-            console.log('📤 Envoi de la commande...');
-            const result = await sendOrderViaWhatsApp(orderData);
-            console.log('📥 Résultat de l\'envoi:', result);
-            
-            if (result.success) {
-                // Vider le panier
-                if (window.delicornerCart) {
-                    window.delicornerCart.clearCart();
-                }
-                
-                // Rediriger vers la page de succès
+        }
+        
+        console.log('📤 Envoi de la commande...');
+        const result = await sendOrderViaWhatsApp(orderData);
+        console.log('📥 Résultat de l\'envoi:', result);
+        
+        if (result.success) {
+            if (!skipRedirect) {
+                if (window.delicornerCart) window.delicornerCart.clearCart();
                 console.log('✅ Commande réussie, redirection vers payment-success.html');
                 window.location.href = 'payment-success.html';
-            } else {
-                // Réactiver le bouton en cas d'erreur
-                checkoutBtn.disabled = false;
-                checkoutBtn.innerHTML = originalText;
-                const errorMsg = result.error || 'Une erreur est survenue lors de l\'envoi de la commande. Veuillez réessayer.';
-                alert(errorMsg);
+                return result;
             }
-            
-            return result;
-        } else {
-            console.warn('⚠️ Bouton checkoutBtn non trouvé, envoi quand même...');
-            // Si le bouton n'existe pas, envoyer quand même
-            const result = await sendOrderViaWhatsApp(orderData);
-            if (result.success) {
-                if (window.delicornerCart) {
-                    window.delicornerCart.clearCart();
-                }
-                window.location.href = 'payment-success.html';
-            }
+            if (checkoutBtn) checkoutBtn.innerHTML = '<span>⏳ Redirection vers Bancontact...</span>';
             return result;
         }
+        if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.innerHTML = originalText;
+        }
+        const errorMsg = result.error || 'Une erreur est survenue lors de l\'envoi de la commande. Veuillez réessayer.';
+        alert(errorMsg);
+        return result;
     } catch (error) {
         console.error('❌ Erreur lors du traitement de la commande:', error);
-        console.error('Stack trace:', error.stack);
+        const btn = document.getElementById('checkoutBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText || '<span>✅ Valider et envoyer la commande</span><span class="checkout-total">€0,00</span>';
+        }
         alert('Une erreur est survenue. Veuillez réessayer. Erreur: ' + error.message);
         return { success: false, error: error.message };
     }
