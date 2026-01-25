@@ -272,7 +272,14 @@ app.get('/api/payment-status', async (req, res) => {
             headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` }
         });
         const status = r.data?.status || 'unknown';
-        res.json({ status });
+        // Include failure reason if available (for canceled/failed/expired payments)
+        const failureReason = r.data?.details?.failureReason || r.data?.details?.bankReasonCode || null;
+        const canceledReason = r.data?.canceledAt ? 'canceled_by_user' : null;
+        res.json({ 
+            status,
+            failureReason: failureReason || canceledReason,
+            method: r.data?.method || null
+        });
     } catch (e) {
         console.error('❌ Erreur payment-status:', e.response?.data || e.message);
         res.status(500).json({ error: 'Impossible de vérifier le paiement.', status: 'unknown' });
