@@ -137,7 +137,25 @@ Invoke-RestMethod -Uri "https://delicorner-whatsapp.onrender.com/api/test-whatsa
 
 ---
 
-## 8. Erreur 132001 : « Template name does not exist in the translation »
+## 8. Entreprise non vérifiée – « Ce compte ne peut pas encore envoyer de messages »
+
+**Meta (Aperçu / Alertes) :**  
+*« Ce compte ne peut pas encore envoyer de messages sur WhatsApp. Avant de pouvoir commencer à envoyer des messages, vous devrez vérifier votre entreprise. Vérifiez votre entreprise dans le Centre de sécurité. »*
+
+**Cause :** L’**entreprise** (Business) n’est **pas vérifiée**. Meta accepte les appels API (d’où `success: true` et les message IDs), mais **ne livre pas** les messages aux destinataires.
+
+**À faire :**
+
+1. **Meta** → **Centre de sécurité** (Security Center) – ou via **Paramètres** → **Sécurité** / **Business verification**.
+2. Suivre la **vérification d’entreprise** : fournir les infos demandées (nom, adresse, site, pièce d’identité ou justificatif, etc.).
+3. Attendre la **validation** par Meta (quelques jours en général).
+4. Une fois **vérifiée**, les messages commenceront à être **livrés** ; rien à changer côté backend ou template.
+
+En attendant, les tests API continueront de renvoyer `success` et des IDs, mais aucun message ne sera reçu sur WhatsApp.
+
+---
+
+## 9. Erreur 132001 : « Template name does not exist in the translation »
 
 **Logs Render :**  
 `(#132001) Template name does not exist in the translation`  
@@ -157,4 +175,4 @@ Invoke-RestMethod -Uri "https://delicorner-whatsapp.onrender.com/api/test-whatsa
 
 ---
 
-En résumé : **config Render** (dont **META_ORDER_TO**), **template Meta approuvé**, **langue du template** (`META_TEMPLATE_LANGUAGE` = langue dans Meta) et **numéro « To »** correct sont les points à contrôler en priorité.
+En résumé : **vérification d’entreprise** (Centre de sécurité Meta) si l’alerte « ce compte ne peut pas envoyer de messages » s’affiche ; **config Render** (dont **META_ORDER_TO**), **template Meta approuvé**, **langue du template** et **numéro 「To」** correct sont les autres points à contrôler.

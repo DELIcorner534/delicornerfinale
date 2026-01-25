@@ -219,7 +219,8 @@ const translations = {
             orderSummary: "Récapitulatif de votre commande",
             deliveryTo: "Livraison à:",
             home: "Retour à l'accueil",
-            seeMenu: "Voir le menu"
+            seeMenu: "Voir le menu",
+            whatsappFailed: "Votre commande est bien enregistrée, mais la notification WhatsApp n'a pas pu être envoyée à la sandwicherie. Contactez le 0488/153.993 pour confirmer."
         },
         // Payment Failure
         paymentFailure: {
@@ -452,7 +453,8 @@ const translations = {
             orderSummary: "Samenvatting van uw bestelling",
             deliveryTo: "Levering aan:",
             home: "Terug naar home",
-            seeMenu: "Bekijk het menu"
+            seeMenu: "Bekijk het menu",
+            whatsappFailed: "Uw bestelling is geregistreerd, maar de WhatsApp-melding naar de broodjeszaak kon niet worden verzonden. Bel 0488/153.993 om te bevestigen."
         },
         // Payment Failure
         paymentFailure: {
@@ -685,7 +687,8 @@ const translations = {
             orderSummary: "Order Summary",
             deliveryTo: "Delivery to:",
             home: "Back to home",
-            seeMenu: "See the menu"
+            seeMenu: "See the menu",
+            whatsappFailed: "Your order is registered, but the WhatsApp notification to the sandwich shop could not be sent. Call 0488/153.993 to confirm."
         },
         // Payment Failure
         paymentFailure: {

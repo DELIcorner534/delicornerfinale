@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" id="html-root">
+<html lang="nl" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="cart-page">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Verbinding met betaalsysteem...</p>
+            <p class="loading-subtext">Even geduld, dit kan 30-60 seconden duren</p>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <nav class="navbar">
@@ -23,6 +32,11 @@
                         </a>
                     </div>
                     <div class="nav-right">
+                        <!-- Mobile Cart Icon (visible on mobile only) -->
+                        <a href="cart.html" class="mobile-cart-icon" id="mobileCartIcon">
+                            🛒
+                            <span class="mobile-cart-count" id="mobileCartCount">0</span>
+                        </a>
                         <button class="mobile-menu-toggle" aria-label="Toggle menu">
                             <span></span>
                             <span></span>
@@ -32,32 +46,6 @@
                             <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
                             <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
                             <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
-                            <li>
-                                <!-- Language Selector -->
-                                <div class="language-selector">
-                                    <button class="lang-btn" id="langBtn">
-                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
-                                        <span class="lang-code" id="langCode">FR</span>
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 4.5l3 3 3-3"/>
-                                        </svg>
-                                    </button>
-                                    <div class="lang-dropdown" id="langDropdown">
-                                        <a href="#" data-lang="fr" class="lang-option">
-                                            <img src="images/flags/fr.svg" alt="Français">
-                                            <span>FR</span>
-                                        </a>
-                                        <a href="#" data-lang="nl" class="lang-option">
-                                            <img src="images/flags/be.svg" alt="Nederlands">
-                                            <span>NL</span>
-                                        </a>
-                                        <a href="#" data-lang="en" class="lang-option">
-                                            <img src="images/flags/gb.svg" alt="English">
-                                            <span>EN</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </li>
                             <li><a href="cart.html" class="active">🛒 <span id="cartCount" class="cart-count">0</span></a></li>
                         </ul>
                     </div>
@@ -86,10 +74,10 @@
                 <!-- Checkout Summary -->
                 <div class="checkout-summary" id="checkoutSummary" style="display: none;">
                     <div class="order-time-notice" id="orderTimeNotice">
-                        <p><strong>⏰ Horaires de commande :</strong></p>
-                        <p>Les commandes sont acceptées uniquement le <strong>jeudi et vendredi de 00h à 8h30</strong>.</p>
+                        <p><strong>⏰ Besteltijden:</strong></p>
+                        <p>Bestellingen worden alleen geaccepteerd op <strong>donderdag en vrijdag van 00u tot 8u30</strong>.</p>
                         <p class="simulation-notice" style="display: none; color: #ff9800; font-size: 0.9rem; margin-top: 0.5rem;">
-                            <em>Mode simulation activé - Les commandes sont actuellement autorisées à tout moment pour les tests.</em>
+                            <em>Simulatiemodus geactiveerd - Bestellingen zijn momenteel op elk moment toegestaan voor tests.</em>
                         </p>
                     </div>
                     <h2 data-i18n="cart.summary">Récapitulatif</h2>
@@ -119,16 +107,16 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="deliveryClass">Classe *</label>
-                            <input type="text" id="deliveryClass" name="delivery_class" placeholder="Ex: 3A, 4B, 5C..." required>
+                            <label for="deliveryClass">Klas *</label>
+                            <input type="text" id="deliveryClass" name="delivery_class" placeholder="Bv: 3A, 4B, 5C..." required>
                         </div>
 
                         <div class="form-group">
-                            <label for="deliverySchool">École *</label>
+                            <label for="deliverySchool">School *</label>
                             <select id="deliverySchool" name="delivery_school" required>
-                                <option value="">Sélectionnez une école</option>
-                                <option value="Heilig Hart">Heilig Hart</option>
-                                <option value="College Halle">College Halle</option>
+                                <option value="">Selecteer een school</option>
+                                <option value="Heilig Hart">Campus Parklaan</option>
+                                <option value="College Halle">Campus Vondel</option>
                             </select>
                         </div>
 
@@ -158,7 +146,7 @@
 
                         <div class="form-group">
                             <label for="deliveryNotes" data-i18n="cart.deliveryNotes">Remarques (optionnel)</label>
-                            <textarea id="deliveryNotes" name="delivery_notes" rows="3" data-i18n-placeholder="cart.deliveryNotesPlaceholder" placeholder="Instructions spéciales pour la livraison..."></textarea>
+                            <textarea id="deliveryNotes" name="delivery_notes" rows="3" data-i18n-placeholder="cart.deliveryNotesPlaceholder" placeholder="Speciale instructies voor levering..."></textarea>
                         </div>
 
                         <hr class="summary-divider">
@@ -169,7 +157,9 @@
                             <label class="payment-method active" for="payment-bancontact">
                                 <input type="radio" id="payment-bancontact" name="payment_method" value="bancontact" checked>
                                 <div class="payment-method-content">
-                                    <div class="payment-icon">💳</div>
+                                    <div class="payment-icon">
+                                        <img src="images/bancontact-logo.png" alt="Bancontact" style="width: 40px; height: auto;">
+                                    </div>
                                     <div>
                                         <strong data-i18n="cart.bancontact">Bancontact</strong>
                                         <span data-i18n="cart.bancontactDesc">Paiement sécurisé en ligne</span>
@@ -179,12 +169,12 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-checkout" id="checkoutBtn">
-                            <span>✅ Valider et envoyer la commande</span>
+                            <span>Bestelling bevestigen</span>
                             <span class="checkout-total">€0,00</span>
                         </button>
 
                         <p class="payment-security" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);">
-                            📱 Votre commande sera automatiquement envoyée par WhatsApp à la sandwicherie après validation.
+                            📱 Uw bestelling wordt automatisch via WhatsApp naar de broodjeszaak verzonden na bevestiging.
                         </p>
                     </form>
                 </div>

@@ -1,5 +1,13 @@
 // Payment Success Page
 document.addEventListener('DOMContentLoaded', function() {
+    var q = new URLSearchParams(window.location.search);
+    if (q.get('whatsapp_failed') === '1') {
+        var fallback = 'Votre commande est bien enregistrée, mais la notification WhatsApp n\'a pas pu être envoyée à la sandwicherie. Contactez le 0488/153.993 pour confirmer.';
+        var msg = (typeof t === 'function' && t('paymentSuccess.whatsappFailed') && t('paymentSuccess.whatsappFailed') !== 'paymentSuccess.whatsappFailed')
+            ? t('paymentSuccess.whatsappFailed') : fallback;
+        alert(msg);
+        history.replaceState({}, '', window.location.pathname);
+    }
     const orderData = localStorage.getItem('completed_order') || localStorage.getItem('pending_order');
     const orderSummary = document.getElementById('orderSummary');
     

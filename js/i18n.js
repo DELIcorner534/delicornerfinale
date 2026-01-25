@@ -1,5 +1,6 @@
 // Internationalization System
-let currentLanguage = localStorage.getItem('language') || 'fr';
+// Site uniquement en néerlandais
+let currentLanguage = 'nl';
 
 // Initialize translations
 document.addEventListener('DOMContentLoaded', function() {

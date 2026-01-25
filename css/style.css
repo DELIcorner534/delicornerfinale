@@ -333,6 +333,31 @@ p {
     align-items: center;
 }
 
+/* Mobile Cart Icon (header) - Hidden on desktop */
+.mobile-cart-icon {
+    display: none;
+    position: relative;
+    font-size: 1.5rem;
+    text-decoration: none;
+    padding: 5px;
+}
+
+.mobile-cart-count {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: var(--accent-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .mobile-menu-toggle {
     display: none;
     flex-direction: column;
@@ -1635,6 +1660,10 @@ p {
     
     .lang-dropdown.active {
         transform: translateX(-50%) translateY(0);
+    }
+    
+    .mobile-cart-icon {
+        display: block;
     }
     
     .mobile-menu-toggle {
@@ -3209,4 +3238,161 @@ p {
     .crudites-modal-footer .btn {
         width: 100%;
     }
+}
+
+/* ===================================
+   Floating Mobile Cart Button
+   =================================== */
+.floating-cart {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent-color), #e55a2b);
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    animation: pulse-cart 2s infinite;
+}
+
+.floating-cart:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(255, 107, 53, 0.5);
+}
+
+.floating-cart-icon {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.floating-cart-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--halal-green);
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 700;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+@keyframes pulse-cart {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(255, 107, 53, 0.6);
+    }
+}
+
+/* Show floating cart only on mobile */
+@media (max-width: 768px) {
+    .floating-cart.has-items {
+        display: flex;
+    }
+}
+
+/* Hide on cart page */
+.cart-page .floating-cart {
+    display: none !important;
+}
+
+/* ===================================
+   Loading Overlay
+   =================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.loading-content {
+    background: white;
+    padding: 40px 60px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--accent-color);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.loading-subtext {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* ===================================
+   Payment Failure Reason Box
+   =================================== */
+.failure-reason-box {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.failure-reason-box p:first-child {
+    margin-bottom: 5px;
+    color: #856404;
+}
+
+.failure-reason-text {
+    color: #856404;
+    font-size: 1.1rem;
+    margin: 0;
 }

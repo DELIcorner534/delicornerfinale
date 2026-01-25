@@ -94,11 +94,13 @@
                             return postJson(API_BASE + '/api/confirm-and-send-whatsapp', { token: token })
                                 .then(function (res) {
                                     if (res.success) console.log('[payment-return] WhatsApp envoyé');
-                                    redirectTo(SUCCESS_URL);
+                                    else console.warn('[payment-return] confirm-and-send success=false', res);
+                                    var url = SUCCESS_URL + (res.success ? '' : '?whatsapp_failed=1');
+                                    redirectTo(url);
                                 })
                                 .catch(function (err) {
                                     console.warn('[payment-return] Erreur confirm-and-send:', err.message || err);
-                                    redirectTo(SUCCESS_URL);
+                                    redirectTo(SUCCESS_URL + '?whatsapp_failed=1');
                                 });
                         }
                         redirectTo(SUCCESS_URL);

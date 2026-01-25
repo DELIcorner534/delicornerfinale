@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" id="html-root">
+<html lang="nl" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +23,11 @@
                         </a>
                     </div>
                     <div class="nav-right">
+                        <!-- Mobile Cart Icon (visible on mobile only) -->
+                        <a href="cart.html" class="mobile-cart-icon" id="mobileCartIcon">
+                            🛒
+                            <span class="mobile-cart-count" id="mobileCartCount">0</span>
+                        </a>
                         <button class="mobile-menu-toggle" aria-label="Toggle menu">
                             <span></span>
                             <span></span>
@@ -32,32 +37,6 @@
                             <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
                             <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
                             <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
-                            <li>
-                                <!-- Language Selector -->
-                                <div class="language-selector">
-                                    <button class="lang-btn" id="langBtn">
-                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
-                                        <span class="lang-code" id="langCode">FR</span>
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 4.5l3 3 3-3"/>
-                                        </svg>
-                                    </button>
-                                    <div class="lang-dropdown" id="langDropdown">
-                                        <a href="#" data-lang="fr" class="lang-option">
-                                            <img src="images/flags/fr.svg" alt="Français">
-                                            <span>FR</span>
-                                        </a>
-                                        <a href="#" data-lang="nl" class="lang-option">
-                                            <img src="images/flags/be.svg" alt="Nederlands">
-                                            <span>NL</span>
-                                        </a>
-                                        <a href="#" data-lang="en" class="lang-option">
-                                            <img src="images/flags/gb.svg" alt="English">
-                                            <span>EN</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </li>
                             <li><a href="cart.html">🛒 <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
                         </ul>
                     </div>
@@ -215,6 +194,12 @@
             </div>
         </div>
     </footer>
+
+    <!-- Floating Mobile Cart Button -->
+    <a href="cart.html" class="floating-cart" id="floatingCart">
+        <span class="floating-cart-icon">🛒</span>
+        <span class="floating-cart-count" id="floatingCartCount">0</span>
+    </a>
 
     <script src="js/cart.js"></script>
     <script src="js/auth.js"></script>

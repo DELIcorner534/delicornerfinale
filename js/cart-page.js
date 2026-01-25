@@ -248,12 +248,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.orderNumber = (window.orderNumberManager && typeof window.orderNumberManager.getNextOrderNumber === 'function')
                     ? window.orderNumberManager.getNextOrderNumber()
                     : String(Date.now()).slice(-6);
+                
+                // Show loading overlay
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const checkoutBtn = document.getElementById('checkoutBtn');
+                if (loadingOverlay) loadingOverlay.style.display = 'flex';
+                if (checkoutBtn) {
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.innerHTML = '<span>⏳ Even geduld...</span>';
+                }
+                
                 try {
                     await processBancontactPayment(formData, { skipStoreOrder: false });
                 } catch (err) {
                     console.error('Erreur Bancontact:', err);
-                    const btn = document.getElementById('checkoutBtn');
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<span>✅ Valider et envoyer la commande</span><span class="checkout-total">€' + formData.total.toFixed(2).replace('.', ',') + '</span>'; }
+                    // Hide loading overlay on error
+                    if (loadingOverlay) loadingOverlay.style.display = 'none';
+                    if (checkoutBtn) { 
+                        checkoutBtn.disabled = false; 
+                        checkoutBtn.innerHTML = '<span>Bestelling bevestigen</span><span class="checkout-total">€' + formData.total.toFixed(2).replace('.', ',') + '</span>'; 
+                    }
                     alert('Impossible de rediriger vers Bancontact. ' + (err.message || 'Veuillez réessayer.'));
                 }
                 return;

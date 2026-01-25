@@ -81,6 +81,28 @@ class ShoppingCart {
             cartCountEl.textContent = cartCount;
             cartCountEl.style.display = cartCount > 0 ? 'flex' : 'none';
         }
+        
+        // Update mobile header cart icon
+        const mobileCartCount = document.getElementById('mobileCartCount');
+        if (mobileCartCount) {
+            mobileCartCount.textContent = cartCount;
+            mobileCartCount.style.display = cartCount > 0 ? 'flex' : 'none';
+        }
+        
+        // Update floating mobile cart button
+        const floatingCart = document.getElementById('floatingCart');
+        const floatingCartCount = document.getElementById('floatingCartCount');
+        
+        if (floatingCart) {
+            if (cartCount > 0) {
+                floatingCart.classList.add('has-items');
+                if (floatingCartCount) {
+                    floatingCartCount.textContent = cartCount;
+                }
+            } else {
+                floatingCart.classList.remove('has-items');
+            }
+        }
     }
 
     showCartNotification() {

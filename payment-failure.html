@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" id="html-root">
+<html lang="nl" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,32 +32,6 @@
                             <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
                             <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
                             <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
-                            <li>
-                                <!-- Language Selector -->
-                                <div class="language-selector">
-                                    <button class="lang-btn" id="langBtn">
-                                        <img src="images/flags/fr.svg" alt="Flag" class="lang-icon" id="langIcon">
-                                        <span class="lang-code" id="langCode">FR</span>
-                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 4.5l3 3 3-3"/>
-                                        </svg>
-                                    </button>
-                                    <div class="lang-dropdown" id="langDropdown">
-                                        <a href="#" data-lang="fr" class="lang-option">
-                                            <img src="images/flags/fr.svg" alt="Français">
-                                            <span>FR</span>
-                                        </a>
-                                        <a href="#" data-lang="nl" class="lang-option">
-                                            <img src="images/flags/be.svg" alt="Nederlands">
-                                            <span>NL</span>
-                                        </a>
-                                        <a href="#" data-lang="en" class="lang-option">
-                                            <img src="images/flags/gb.svg" alt="English">
-                                            <span>EN</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </li>
                             <li><a href="cart.html">🛒 <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
                         </ul>
                     </div>
@@ -71,21 +45,34 @@
         <div class="container">
             <div class="payment-result-content">
                 <div class="payment-failure-icon">✕</div>
-                <h1 data-i18n="paymentFailure.title">Paiement Échoué</h1>
-                <p data-i18n="paymentFailure.message">Désolé, votre paiement n'a pas pu être traité. Veuillez réessayer ou contacter notre service client.</p>
-                <div class="payment-failure-reasons" data-i18n="paymentFailure.reasons">
-                    <p><strong>Raisons possibles :</strong></p>
+                <h1>Betaling Mislukt</h1>
+                <p>Sorry, uw betaling kon niet worden verwerkt.</p>
+                
+                <!-- Actual failure reason from Mollie -->
+                <div id="failureReasonBox" class="failure-reason-box" style="display: none;">
+                    <p><strong>Reden:</strong></p>
+                    <p id="failureReason" class="failure-reason-text"></p>
+                </div>
+                
+                <!-- Loading state while checking -->
+                <div id="checkingStatus" style="margin: 20px 0; color: #666;">
+                    <p>Betalingsstatus controleren...</p>
+                </div>
+                
+                <div class="payment-failure-reasons" id="genericReasons">
+                    <p><strong>Mogelijke redenen:</strong></p>
                     <ul>
-                        <li data-i18n="paymentFailure.reason1">Fonds insuffisants</li>
-                        <li data-i18n="paymentFailure.reason2">Problème de connexion</li>
-                        <li data-i18n="paymentFailure.reason3">Carte refusée</li>
-                        <li data-i18n="paymentFailure.reason4">Transaction annulée</li>
+                        <li>Onvoldoende saldo</li>
+                        <li>Verbindingsprobleem</li>
+                        <li>Kaart geweigerd</li>
+                        <li>Transactie geannuleerd door gebruiker</li>
+                        <li>Sessie verlopen</li>
                     </ul>
                 </div>
                 <div class="payment-result-actions">
-                    <a href="cart.html" class="btn btn-primary" data-i18n="paymentFailure.retry">Réessayer le paiement</a>
-                    <a href="index.html" class="btn btn-outline" data-i18n="paymentFailure.home">Retour à l'accueil</a>
-                    <a href="contact.html" class="btn btn-outline" data-i18n="paymentFailure.contact">Nous contacter</a>
+                    <a href="cart.html" class="btn btn-primary">Opnieuw proberen</a>
+                    <a href="index.html" class="btn btn-outline">Terug naar home</a>
+                    <a href="contact.html" class="btn btn-outline">Contact opnemen</a>
                 </div>
             </div>
         </div>
