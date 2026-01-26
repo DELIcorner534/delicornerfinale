@@ -15,6 +15,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
+const axios = require('axios');
 require('dotenv').config();
 
 // Import de better-sqlite3 (synchrone, plus simple que sqlite3)
@@ -27,6 +29,23 @@ const PORT = process.env.PORT || 3000;
 const WHATSAPP_PHONE = process.env.WHATSAPP_PHONE || '32451032356';
 const ORDER_PREFIX = process.env.ORDER_PREFIX || 'DC';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'delicorner2026';
+
+// Configuration Mollie (Bancontact)
+const MOLLIE_API_KEY = process.env.MOLLIE_API_KEY;
+const MOLLIE_REDIRECT_SUCCESS_URL = process.env.MOLLIE_REDIRECT_SUCCESS_URL || 'https://delicornerhalle.be/payment-return.html';
+const MOLLIE_REDIRECT_FAILURE_URL = process.env.MOLLIE_REDIRECT_FAILURE_URL || 'https://delicornerhalle.be/payment-failure.html';
+const MOLLIE_WEBHOOK_URL = process.env.MOLLIE_WEBHOOK_URL;
+
+// Token -> payment_id (pour payment-return via ?t=)
+const paymentTokens = new Map();
+const TOKEN_TTL_MS = 30 * 60 * 1000; // 30 min
+function cleanupTokens() {
+    const now = Date.now();
+    for (const [k, v] of paymentTokens.entries()) {
+        if (now - (v.createdAt || 0) > TOKEN_TTL_MS) paymentTokens.delete(k);
+    }
+}
+setInterval(cleanupTokens, 5 * 60 * 1000);
 
 // ============================================================
 // BASE DE DONNÉES SQLite
@@ -578,6 +597,276 @@ app.post('/send-whatsapp', async (req, res) => {
             success: false,
             error: error.message
         });
+    }
+});
+
+// ============================================================
+// ROUTES MOLLIE (BANCONTACT)
+// ============================================================
+
+/**
+ * POST /api/create-payment
+ * Créer un paiement Mollie (Bancontact)
+ */
+app.post('/api/create-payment', async (req, res) => {
+    try {
+        if (!MOLLIE_API_KEY) {
+            return res.status(500).json({
+                error: 'Configuration Mollie manquante (MOLLIE_API_KEY).'
+            });
+        }
+
+        const { amount, items, delivery, orderNumber } = req.body || {};
+        if (typeof amount !== 'number' || !items || !delivery) {
+            return res.status(400).json({ error: 'Données de paiement invalides.' });
+        }
+
+        // Générer le code de commande
+        const orderCode = generateOrderCode();
+
+        // Enregistrer la commande en base de données
+        const stmt = db.prepare(`
+            INSERT INTO orders (
+                order_code, customer_name, customer_phone, customer_class,
+                customer_school, delivery_date, items, total, payment_method, 
+                payment_status, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+            orderCode,
+            delivery.name || 'Client',
+            delivery.phone || '',
+            delivery.class || null,
+            delivery.school || null,
+            delivery.date || null,
+            JSON.stringify(items),
+            amount,
+            'bancontact',
+            'pending',
+            delivery.notes || null
+        );
+
+        console.log(`📦 Commande ${orderCode} créée (paiement en attente)`);
+
+        // Créer le token pour le retour de paiement
+        const token = crypto.randomBytes(16).toString('hex');
+        const base = MOLLIE_REDIRECT_SUCCESS_URL;
+        const redirectUrl = base + (base.includes('?') ? '&' : '?') + 't=' + token;
+
+        const paymentData = {
+            amount: {
+                currency: 'EUR',
+                value: amount.toFixed(2)
+            },
+            description: `Commande Delicorner ${orderCode} - ${items.length} article(s)`,
+            redirectUrl,
+            webhookUrl: MOLLIE_WEBHOOK_URL || undefined,
+            method: 'bancontact',
+            metadata: {
+                order_code: orderCode,
+                customer_name: delivery.name || '',
+                customer_phone: delivery.phone || '',
+                school: delivery.school || '',
+                class: delivery.class || ''
+            }
+        };
+
+        const response = await axios.post('https://api.mollie.com/v2/payments', paymentData, {
+            headers: {
+                Authorization: `Bearer ${MOLLIE_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const checkoutUrl = response.data?._links?.checkout?.href;
+        const paymentId = response.data?.id;
+
+        if (!checkoutUrl) {
+            return res.status(500).json({ error: 'URL de paiement introuvable.' });
+        }
+
+        // Stocker le token avec les infos de commande
+        paymentTokens.set(token, { 
+            payment_id: paymentId, 
+            order_code: orderCode,
+            order: { items, delivery, total: amount, orderNumber: orderCode },
+            createdAt: Date.now() 
+        });
+
+        console.log(`💳 Paiement Mollie créé: ${paymentId} pour commande ${orderCode}`);
+
+        res.json({ 
+            checkout_url: checkoutUrl, 
+            payment_id: paymentId, 
+            order_code: orderCode,
+            return_token: token 
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur Mollie:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Erreur lors de la création du paiement Mollie.' });
+    }
+});
+
+/**
+ * GET /api/payment-status
+ * Vérifier le statut d'un paiement Mollie
+ */
+app.get('/api/payment-status', async (req, res) => {
+    try {
+        const id = req.query.id;
+        if (!id || !MOLLIE_API_KEY) {
+            return res.status(400).json({ error: 'Paramètre id manquant ou Mollie non configuré.' });
+        }
+
+        const r = await axios.get(`https://api.mollie.com/v2/payments/${id}`, {
+            headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` }
+        });
+
+        const status = r.data?.status || 'unknown';
+        const failureReason = r.data?.details?.failureReason || r.data?.details?.bankReasonCode || null;
+        const canceledReason = r.data?.canceledAt ? 'canceled_by_user' : null;
+        const orderCode = r.data?.metadata?.order_code || null;
+
+        // Mettre à jour le statut dans la base de données si payé
+        if (status === 'paid' && orderCode) {
+            db.prepare(`
+                UPDATE orders 
+                SET payment_status = 'paid', status = 'confirmed', updated_at = datetime('now', 'localtime')
+                WHERE order_code = ?
+            `).run(orderCode);
+            console.log(`✅ Paiement confirmé pour commande ${orderCode}`);
+        }
+
+        res.json({ 
+            status,
+            failureReason: failureReason || canceledReason,
+            method: r.data?.method || null,
+            order_code: orderCode
+        });
+
+    } catch (e) {
+        console.error('❌ Erreur payment-status:', e.response?.data || e.message);
+        res.status(500).json({ error: 'Impossible de vérifier le paiement.', status: 'unknown' });
+    }
+});
+
+/**
+ * GET /api/payment-by-token
+ * Récupérer payment_id à partir du token
+ */
+app.get('/api/payment-by-token', (req, res) => {
+    const t = req.query.t;
+    if (!t) return res.status(400).json({ error: 'Paramètre t manquant.' });
+    
+    const entry = paymentTokens.get(t);
+    if (!entry || !entry.payment_id) {
+        return res.status(404).json({ error: 'Token invalide ou expiré.' });
+    }
+    
+    res.json({ 
+        payment_id: entry.payment_id,
+        order_code: entry.order_code
+    });
+});
+
+/**
+ * POST /api/confirm-and-send-whatsapp
+ * Confirmer le paiement et générer le lien WhatsApp
+ */
+app.post('/api/confirm-and-send-whatsapp', async (req, res) => {
+    try {
+        const { token } = req.body || {};
+        if (!token) {
+            return res.status(400).json({ error: 'Paramètre token manquant.', success: false });
+        }
+
+        const entry = paymentTokens.get(token);
+        if (!entry || !entry.payment_id || !entry.order_code) {
+            return res.status(404).json({ error: 'Token invalide ou expiré.', success: false });
+        }
+
+        const { payment_id, order_code } = entry;
+
+        // Vérifier le statut du paiement
+        const r = await axios.get(`https://api.mollie.com/v2/payments/${payment_id}`, {
+            headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` }
+        });
+
+        const status = (r.data?.status || '').toLowerCase();
+        if (status !== 'paid') {
+            return res.status(400).json({ error: 'Paiement non payé.', success: false });
+        }
+
+        // Mettre à jour la commande en base
+        db.prepare(`
+            UPDATE orders 
+            SET payment_status = 'paid', status = 'confirmed', whatsapp_sent = 1, updated_at = datetime('now', 'localtime')
+            WHERE order_code = ?
+        `).run(order_code);
+
+        // Récupérer la commande pour générer le lien WhatsApp
+        const order = db.prepare('SELECT * FROM orders WHERE order_code = ?').get(order_code);
+        const whatsappLink = generateWhatsAppLink(order);
+
+        console.log(`✅ Paiement confirmé et WhatsApp prêt pour commande ${order_code}`);
+
+        res.json({ 
+            success: true, 
+            orderNumber: order_code,
+            whatsappLink: whatsappLink
+        });
+
+    } catch (e) {
+        console.error('❌ confirm-and-send-whatsapp:', e.response?.data || e.message);
+        res.status(500).json({ error: e.message || 'Erreur confirmation paiement.', success: false });
+    }
+});
+
+/**
+ * POST /api/mollie-webhook
+ * Webhook Mollie pour les notifications de paiement
+ */
+app.post('/api/mollie-webhook', async (req, res) => {
+    try {
+        const { id } = req.body;
+        if (!id) {
+            return res.status(400).send('Missing payment id');
+        }
+
+        console.log(`📥 Webhook Mollie reçu pour paiement: ${id}`);
+
+        const r = await axios.get(`https://api.mollie.com/v2/payments/${id}`, {
+            headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` }
+        });
+
+        const status = r.data?.status || 'unknown';
+        const orderCode = r.data?.metadata?.order_code;
+
+        if (orderCode) {
+            if (status === 'paid') {
+                db.prepare(`
+                    UPDATE orders 
+                    SET payment_status = 'paid', status = 'confirmed', updated_at = datetime('now', 'localtime')
+                    WHERE order_code = ?
+                `).run(orderCode);
+                console.log(`✅ Webhook: Paiement confirmé pour ${orderCode}`);
+            } else if (['canceled', 'expired', 'failed'].includes(status)) {
+                db.prepare(`
+                    UPDATE orders 
+                    SET payment_status = ?, updated_at = datetime('now', 'localtime')
+                    WHERE order_code = ?
+                `).run(status, orderCode);
+                console.log(`❌ Webhook: Paiement ${status} pour ${orderCode}`);
+            }
+        }
+
+        res.status(200).send('OK');
+
+    } catch (e) {
+        console.error('❌ Webhook Mollie error:', e.message);
+        res.status(500).send('Error');
     }
 });
 
