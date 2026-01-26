@@ -5,6 +5,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const cart = window.delicornerCart;
+
+    // Custom Alert Function
+    function showAlert(message, icon = '⚠️') {
+        const alertOverlay = document.getElementById('customAlert');
+        const alertMessage = document.getElementById('customAlertMessage');
+        const alertBtn = document.getElementById('customAlertBtn');
+        const alertIcon = alertOverlay?.querySelector('.custom-alert-icon');
+        
+        if (alertOverlay && alertMessage) {
+            alertMessage.textContent = message;
+            if (alertIcon) alertIcon.textContent = icon;
+            alertOverlay.style.display = 'flex';
+            
+            // Close on button click
+            const closeAlert = () => {
+                alertOverlay.style.display = 'none';
+                alertBtn?.removeEventListener('click', closeAlert);
+            };
+            alertBtn?.addEventListener('click', closeAlert);
+            
+            // Close on overlay click
+            alertOverlay.addEventListener('click', (e) => {
+                if (e.target === alertOverlay) closeAlert();
+            });
+            
+            // Close on Escape key
+            document.addEventListener('keydown', function escHandler(e) {
+                if (e.key === 'Escape') {
+                    closeAlert();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            });
+        } else {
+            // Fallback to native alert
+            alert(message);
+        }
+    }
     const cartItemsContainer = document.getElementById('cartItems');
     const cartEmpty = document.getElementById('cartEmpty');
     const checkoutSummary = document.getElementById('checkoutSummary');
@@ -128,6 +165,61 @@ document.addEventListener('DOMContentLoaded', function() {
         END_MINUTE: 30
     };
 
+    // Setup date picker for advance orders (only Thursday and Friday)
+    const deliveryDateInput = document.getElementById('deliveryDate');
+    if (deliveryDateInput) {
+        // Get today's date
+        const today = new Date();
+        
+        // Function to get next valid order day (Thursday=4 or Friday=5)
+        function getNextOrderDay(date) {
+            const day = date.getDay();
+            // Find next Thursday or Friday
+            if (day === 0) { // Sunday -> Thursday (+4)
+                date.setDate(date.getDate() + 4);
+            } else if (day === 1) { // Monday -> Thursday (+3)
+                date.setDate(date.getDate() + 3);
+            } else if (day === 2) { // Tuesday -> Thursday (+2)
+                date.setDate(date.getDate() + 2);
+            } else if (day === 3) { // Wednesday -> Thursday (+1)
+                date.setDate(date.getDate() + 1);
+            } else if (day === 4) { // Thursday -> OK
+                // Already Thursday, keep it
+            } else if (day === 5) { // Friday -> OK
+                // Already Friday, keep it
+            } else if (day === 6) { // Saturday -> Thursday (+5)
+                date.setDate(date.getDate() + 5);
+            }
+            return date;
+        }
+        
+        // Set minimum date to next Thursday or Friday
+        const minDate = getNextOrderDay(new Date(today));
+        
+        // Set maximum date to 1 month from now
+        const maxDate = new Date(today);
+        maxDate.setDate(maxDate.getDate() + 30); // 1 month
+        
+        // Format dates for input
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        
+        deliveryDateInput.min = formatDate(minDate);
+        deliveryDateInput.max = formatDate(maxDate);
+        deliveryDateInput.value = formatDate(minDate); // Default to next Thursday/Friday
+        
+        // Validate that selected date is Thursday or Friday only
+        deliveryDateInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const dayOfWeek = selectedDate.getDay();
+            
+            // Only allow Thursday (4) and Friday (5)
+            if (dayOfWeek !== 4 && dayOfWeek !== 5) {
+                showAlert('Bestellingen zijn alleen mogelijk op donderdag en vrijdag.', '📅');
+                this.value = formatDate(minDate);
+            }
+        });
+    }
+
     // Initial render
     renderCart();
 
@@ -184,39 +276,54 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('📝 Formulaire soumis !');
             
             if (cart.cart.length === 0) {
-                const emptyCartMsg = t('cart.emptyCart') || 'Votre panier est vide';
-                alert(emptyCartMsg);
+                const emptyCartMsg = t('cart.emptyCart') || 'Uw winkelwagen is leeg';
+                showAlert(emptyCartMsg, '🛒');
                 return;
             }
 
             const timeCheck = isOrderTimeAllowed();
             if (!timeCheck.allowed) {
-                alert(timeCheck.message);
+                showAlert(timeCheck.message, '⏰');
                 return;
             }
             
             const deliveryName = document.getElementById('deliveryName');
             const deliveryClass = document.getElementById('deliveryClass');
             const deliverySchool = document.getElementById('deliverySchool');
+            const deliveryDate = document.getElementById('deliveryDate');
             const deliveryPhone = document.getElementById('deliveryPhone');
             const deliveryNotes = document.getElementById('deliveryNotes');
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
             
             if (!deliveryName || !deliveryName.value.trim()) {
-                alert('Veuillez entrer votre nom.');
+                showAlert('Vul uw naam in.', '✏️');
                 deliveryName?.focus();
                 return;
             }
             if (!deliveryPhone || !deliveryPhone.value.trim()) {
-                alert('Veuillez entrer votre numéro de téléphone.');
+                showAlert('Vul uw telefoonnummer in.', '📱');
                 deliveryPhone?.focus();
                 return;
             }
+            if (!deliveryDate || !deliveryDate.value) {
+                showAlert('Selecteer een datum voor uw bestelling.', '📅');
+                deliveryDate?.focus();
+                return;
+            }
             if (!paymentMethod) {
-                alert('Veuillez sélectionner une méthode de paiement.');
+                showAlert('Selecteer een betaalmethode.', '💳');
                 return;
             }
             
+            // Format the date for display (DD/MM/YYYY)
+            const dateObj = new Date(deliveryDate.value);
+            const formattedDate = dateObj.toLocaleDateString('nl-BE', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+
             const formData = {
                 items: cart.cart,
                 total: cart.getTotal(),
@@ -224,6 +331,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     name: deliveryName.value.trim(),
                     class: deliveryClass?.value.trim() || '',
                     school: deliverySchool?.value || '',
+                    date: deliveryDate.value,
+                    dateFormatted: formattedDate,
                     phone: deliveryPhone.value.trim(),
                     address: '',
                     postal: '',
@@ -234,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             if (!formData.delivery.name || !formData.delivery.phone) {
-                alert('Veuillez remplir tous les champs obligatoires (Nom et Téléphone).');
+                showAlert('Vul alle verplichte velden in (Naam en Telefoon).', '⚠️');
                 return;
             }
 
@@ -242,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (isBancontact) {
                 if (typeof processBancontactPayment !== 'function') {
-                    alert('Le paiement Bancontact n\'est pas configuré. Rechargez la page.');
+                    showAlert('Bancontact betaling is niet geconfigureerd. Herlaad de pagina.', '❌');
                     return;
                 }
                 formData.orderNumber = (window.orderNumberManager && typeof window.orderNumberManager.getNextOrderNumber === 'function')
@@ -268,18 +377,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         checkoutBtn.disabled = false; 
                         checkoutBtn.innerHTML = '<span>Bestelling bevestigen</span><span class="checkout-total">€' + formData.total.toFixed(2).replace('.', ',') + '</span>'; 
                     }
-                    alert('Impossible de rediriger vers Bancontact. ' + (err.message || 'Veuillez réessayer.'));
+                    showAlert('Kan niet doorverwijzen naar Bancontact. ' + (err.message || 'Probeer opnieuw.'), '❌');
                 }
                 return;
             }
 
             if (typeof processWhatsAppOrder !== 'function') {
-                alert('Le système de commande n\'est pas configuré. Veuillez recharger la page.');
+                showAlert('Het bestelsysteem is niet geconfigureerd. Herlaad de pagina.', '❌');
                 return;
             }
             processWhatsAppOrder(formData).catch(function(error) {
                 console.error('❌ Erreur envoi commande:', error);
-                alert('Une erreur est survenue. Veuillez réessayer.\n\n' + (error.message || ''));
+                showAlert('Er is een fout opgetreden. Probeer opnieuw. ' + (error.message || ''), '❌');
             });
         });
     }

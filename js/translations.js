@@ -142,7 +142,7 @@ const translations = {
             thuFri: "Jeu - Ven: 7h - 17h",
             weekend: "Sam - Dim: Fermé",
             certified: "HALAL CERTIFIÉ",
-            rights: "© 2024 Delicorner. Tous droits réservés."
+            rights: "© 2026 Delicorner. Tous droits réservés. — Site par Amou."
         },
         // Authentication
         auth: {
@@ -376,7 +376,7 @@ const translations = {
             thuFri: "Do - Vr: 7u - 17u",
             weekend: "Za - Zo: Gesloten",
             certified: "HALAL GECERTIFICEERD",
-            rights: "© 2024 Delicorner. Alle rechten voorbehouden."
+            rights: "© 2026 Delicorner. Alle rechten voorbehouden. — Site door Amou."
         },
         // Authentication
         auth: {
@@ -610,7 +610,7 @@ const translations = {
             thuFri: "Thu - Fri: 7 AM - 5 PM",
             weekend: "Sat - Sun: Closed",
             certified: "HALAL CERTIFIED",
-            rights: "© 2024 Delicorner. All rights reserved."
+            rights: "© 2026 Delicorner. All rights reserved. — Site by Amou."
         },
         // Authentication
         auth: {

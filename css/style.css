@@ -1463,6 +1463,13 @@ p {
     min-height: 120px;
 }
 
+.form-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
 .form-success {
     background: #d4edda;
     color: #155724;
@@ -3308,6 +3315,85 @@ p {
 /* Hide on cart page */
 .cart-page .floating-cart {
     display: none !important;
+}
+
+/* ===================================
+   Custom Alert Modal
+   =================================== */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.custom-alert-box {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.custom-alert-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.custom-alert-message {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.custom-alert-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(212, 165, 116, 0.4);
+}
+
+.custom-alert-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 165, 116, 0.5);
+}
+
+.custom-alert-btn:active {
+    transform: translateY(0);
 }
 
 /* ===================================

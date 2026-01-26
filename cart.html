@@ -11,6 +11,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="cart-page">
+    <!-- Custom Alert Modal -->
+    <div id="customAlert" class="custom-alert-overlay" style="display: none;">
+        <div class="custom-alert-box">
+            <div class="custom-alert-icon">⚠️</div>
+            <p id="customAlertMessage" class="custom-alert-message"></p>
+            <button id="customAlertBtn" class="custom-alert-btn">OK</button>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-content">
@@ -121,6 +130,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="deliveryDate">Datum van bestelling *</label>
+                            <input type="date" id="deliveryDate" name="delivery_date" required>
+                            <small class="form-hint">Bestellingen alleen op donderdag en vrijdag (tot 1 maand vooruit)</small>
+                        </div>
+
+                        <div class="form-group">
                             <label for="deliveryPhone" data-i18n="cart.deliveryPhone">Téléphone *</label>
                             <input type="tel" id="deliveryPhone" name="delivery_phone" required>
                         </div>
@@ -219,7 +234,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p data-i18n="footer.rights">&copy; 2024 Delicorner. Tous droits réservés.</p>
+                <p data-i18n="footer.rights">&copy; 2026 Delicorner. Alle rechten voorbehouden. — Site door Amou.</p>
             </div>
         </div>
     </footer>
