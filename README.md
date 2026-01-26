@@ -178,7 +178,7 @@ window.processBancontactPayment = processBancontactPayment; // Utilise l'API Mol
    ```html
    <p>Votre adresse complète<br>Code postal, Ville<br>Belgique</p>
    <p><a href="tel:+32XXXXXXXXX">+32 XX XXX XX XX</a></p>
-   <p><a href="mailto:contact@delicorner.be">contact@delicorner.be</a></p>
+   <p><a href="mailto:sisidelicorner@gmail.com">sisidelicorner@gmail.com</a></p>
    ```
 
 2. **Dans le footer de toutes les pages** :
