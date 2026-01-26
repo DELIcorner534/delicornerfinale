@@ -8,27 +8,29 @@ Ce système hybride permet de gérer les commandes de manière fiable et profess
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     FLUX DE COMMANDE                            │
+│                FLUX DE COMMANDE (avec Bancontact)               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  1. Client remplit le formulaire sur le site                    │
 │         ↓                                                       │
-│  2. Le frontend envoie les données au backend                   │
+│  2. Client choisit Bancontact comme méthode de paiement         │
 │         ↓                                                       │
 │  3. Le backend :                                                │
 │     • Génère un code unique (ex: DC-2026-0042)                  │
 │     • Enregistre la commande en base de données SQLite          │
-│     • Retourne le code + lien WhatsApp pré-rempli               │
+│     • Crée un paiement Mollie                                   │
+│     • Redirige vers la page de paiement Bancontact              │
 │         ↓                                                       │
-│  4. Le client est redirigé vers la page de succès               │
+│  4. Le client paie via Bancontact (app bancaire)                │
+│         ↓                                                       │
+│  5. Retour sur la page de succès                                │
 │     • Code de commande affiché                                  │
-│     • Bouton pour ouvrir WhatsApp                               │
-│         ↓                                                       │
-│  5. Le client clique et envoie le message WhatsApp              │
-│     (le message peut être modifié, le code reste la référence)  │
+│     • Commande marquée comme payée en base de données           │
+│     • Bouton pour ouvrir WhatsApp (optionnel)                   │
 │         ↓                                                       │
 │  6. L'entreprise vérifie la commande dans le back-office        │
-│     en utilisant le code reçu                                   │
+│     • Commandes payées visibles immédiatement                   │
+│     • Statut de paiement mis à jour automatiquement             │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -56,10 +58,17 @@ cp .env.hybrid.example .env
 
 2. Modifiez les variables selon vos besoins :
 ```env
+# Configuration de base
 PORT=3000
 WHATSAPP_PHONE=32451032356
 ORDER_PREFIX=DC
 ADMIN_PASSWORD=votre_mot_de_passe
+
+# Configuration Mollie (Bancontact) - OBLIGATOIRE pour les paiements
+MOLLIE_API_KEY=live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MOLLIE_REDIRECT_SUCCESS_URL=https://delicornerhalle.be/payment-return.html
+MOLLIE_REDIRECT_FAILURE_URL=https://delicornerhalle.be/payment-failure.html
+MOLLIE_WEBHOOK_URL=https://delicorner-whatsapp.onrender.com/api/mollie-webhook
 ```
 
 ### Démarrage
@@ -83,6 +92,16 @@ npm run dev
 | `GET` | `/api/orders/:code` | Récupérer une commande par son code |
 | `PATCH` | `/api/orders/:code` | Mettre à jour le statut d'une commande |
 | `DELETE` | `/api/orders/:code` | Annuler une commande |
+
+### Paiements Mollie (Bancontact)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `POST` | `/api/create-payment` | Créer un paiement Mollie et obtenir l'URL de checkout |
+| `GET` | `/api/payment-status?id=xxx` | Vérifier le statut d'un paiement |
+| `GET` | `/api/payment-by-token?t=xxx` | Récupérer le payment_id à partir du token |
+| `POST` | `/api/confirm-and-send-whatsapp` | Confirmer paiement et générer lien WhatsApp |
+| `POST` | `/api/mollie-webhook` | Webhook pour notifications Mollie |
 
 ### Statistiques
 
@@ -241,11 +260,32 @@ Le code a été pensé pour que cette transition soit simple et ne nécessite qu
 ### Variables d'environnement pour la production
 
 ```env
+# Configuration de base
 PORT=3000
 WHATSAPP_PHONE=32451032356
 ORDER_PREFIX=DC
 ADMIN_PASSWORD=mot_de_passe_tres_securise
+
+# Configuration Mollie (Bancontact)
+MOLLIE_API_KEY=live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MOLLIE_REDIRECT_SUCCESS_URL=https://delicornerhalle.be/payment-return.html
+MOLLIE_REDIRECT_FAILURE_URL=https://delicornerhalle.be/payment-failure.html
+MOLLIE_WEBHOOK_URL=https://delicorner-whatsapp.onrender.com/api/mollie-webhook
 ```
+
+### Variables sur Render.com
+
+Sur le dashboard Render, dans **Environment**, ajoutez :
+
+| Variable | Valeur |
+|----------|--------|
+| `WHATSAPP_PHONE` | `32451032356` |
+| `ORDER_PREFIX` | `DC` |
+| `ADMIN_PASSWORD` | Votre mot de passe admin |
+| `MOLLIE_API_KEY` | Votre clé API Mollie (live_xxx ou test_xxx) |
+| `MOLLIE_REDIRECT_SUCCESS_URL` | `https://delicornerhalle.be/payment-return.html` |
+| `MOLLIE_REDIRECT_FAILURE_URL` | `https://delicornerhalle.be/payment-failure.html` |
+| `MOLLIE_WEBHOOK_URL` | `https://delicorner-whatsapp.onrender.com/api/mollie-webhook` |
 
 ## Sécurité
 
