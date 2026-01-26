@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Crudités options data
     const cruditesOptions = {
-        'alle-groenten': { name: 'Alle groenten', price: 0.50 },
+        'alle-groenten': { name: 'Alle groenten', price: 0.80 },
         'wortel': { name: 'Wortel', price: 0.20 },
         'sla': { name: 'Sla', price: 0.20 },
         'komkommer': { name: 'Komkommer', price: 0.20 },
