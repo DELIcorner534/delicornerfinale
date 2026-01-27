@@ -342,6 +342,11 @@ p {
     padding: 5px;
 }
 
+.mobile-cart-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
 .mobile-cart-count {
     position: absolute;
     top: -5px;
@@ -632,6 +637,171 @@ p {
     text-align: center;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card-with-bg {
+    background-image: url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.feature-card-with-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+.feature-card-with-bg h3,
+.feature-card-with-bg p {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 0.25rem 0;
+}
+
+.feature-card-with-bg h3 {
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.feature-card-with-bg p {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* Feature card with Halal background */
+.feature-card-halal {
+    background-image: url('https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.feature-card-halal::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+.feature-card-halal h3,
+.feature-card-halal p {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 0.25rem 0;
+}
+
+.feature-card-halal h3 {
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.feature-card-halal p {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* Feature card with Homemade background */
+.feature-card-homemade {
+    background-image: url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.feature-card-homemade::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+.feature-card-homemade h3,
+.feature-card-homemade p {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 0.25rem 0;
+}
+
+.feature-card-homemade h3 {
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.feature-card-homemade p {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* Feature card with Passion background */
+.feature-card-passion {
+    background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.feature-card-passion::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+.feature-card-passion h3,
+.feature-card-passion p {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 0.25rem 0;
+}
+
+.feature-card-passion h3 {
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.feature-card-passion p {
+    color: var(--text-dark);
+    font-weight: 500;
 }
 
 .feature-card:hover {
@@ -642,6 +812,13 @@ p {
 .feature-icon {
     font-size: 3.5rem;
     margin-bottom: 1rem;
+}
+
+.feature-icon svg {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto;
 }
 
 .feature-card h3 {
@@ -956,32 +1133,11 @@ p {
     display: inline-block;
 }
 
-    .menu-section-header h2::before {
-        content: '🍽️';
-        position: absolute;
-        left: -50px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 2rem;
-        opacity: 0.3;
-    }
-    
-    .menu-section-header h2::after {
-        content: '🍽️';
-        position: absolute;
-        right: -50px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 2rem;
-        opacity: 0.3;
-    }
-    
-    @media (max-width: 768px) {
-        .menu-section-header h2::before,
-        .menu-section-header h2::after {
-            display: none;
-        }
-    }
+.menu-section-header h2::before,
+.menu-section-header h2::after {
+    display: none !important;
+    content: none !important;
+}
 
 .menu-section-subtitle {
     color: var(--text-light);
@@ -1283,6 +1439,13 @@ p {
     font-size: 5rem;
 }
 
+.placeholder-content svg {
+    width: 64px;
+    height: 64px;
+    display: block;
+    margin: 0 auto;
+}
+
 .values-section,
 .certifications-section {
     margin-bottom: 5rem;
@@ -1320,6 +1483,13 @@ p {
     margin-bottom: 1rem;
 }
 
+.value-icon svg {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto;
+}
+
 .value-card h3 {
     color: var(--secondary-color);
     margin-bottom: 0.75rem;
@@ -1348,6 +1518,13 @@ p {
 .cert-badge {
     font-size: 2.5rem;
     margin-bottom: 1rem;
+}
+
+.cert-badge svg {
+    width: 32px;
+    height: 32px;
+    display: block;
+    margin: 0 auto;
 }
 
 .certification-card p {
@@ -1393,6 +1570,14 @@ p {
 .contact-icon {
     font-size: 2.5rem;
     margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.contact-icon svg {
+    width: 40px;
+    height: 40px;
 }
 
 .contact-card h3 {
@@ -1413,6 +1598,24 @@ p {
 
 .contact-card a:hover {
     color: var(--accent-color);
+}
+
+/* Force black color for phone number links */
+.contact-card a[href^="tel:"] {
+    color: #000000 !important;
+}
+
+.contact-card a[href^="tel:"]:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Force black color for email links */
+.contact-card a[href^="mailto:"] {
+    color: #000000 !important;
+}
+
+.contact-card a[href^="mailto:"]:hover {
+    color: var(--primary-color) !important;
 }
 
 .contact-form-wrapper {
@@ -2091,6 +2294,13 @@ p {
 .cart-empty-icon {
     font-size: 5rem;
     margin-bottom: 1rem;
+}
+
+.cart-empty-icon svg {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto;
 }
 
 .cart-empty h2 {
@@ -3276,6 +3486,12 @@ p {
 .floating-cart-icon {
     font-size: 1.8rem;
     color: white;
+}
+
+.floating-cart-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: white;
 }
 
 .floating-cart-count {

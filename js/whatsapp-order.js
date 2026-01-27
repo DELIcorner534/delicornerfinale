@@ -192,16 +192,16 @@ async function sendOrderViaWhatsApp(orderData) {
                         messageSent = true;
                         console.log('✅ Message WhatsApp envoyé:', result.messageId || result.orderNumber);
                     } else {
-                        apiErrorMsg = result.error || 'Erreur backend';
+                        apiErrorMsg = result.error || 'Backendfout';
                     }
                 } else {
                     const err = await response.json().catch(() => ({}));
-                    apiErrorMsg = err.error || 'Erreur ' + response.status;
+                    apiErrorMsg = err.error || 'Fout ' + response.status;
                 }
             } catch (e) {
                 apiErrorMsg = e.name === 'AbortError'
-                    ? 'Délai dépassé (90 s). Le backend Render peut être en réveil. Réessayez.'
-                    : (e.message || 'Erreur réseau.');
+                    ? 'Time-out (90 s). De backend kan aan het opstarten zijn. Probeer opnieuw.'
+                    : (e.message || 'Netwerkfout.');
                 console.error('❌ Erreur envoi API:', apiErrorMsg);
             }
         }
@@ -211,7 +211,7 @@ async function sendOrderViaWhatsApp(orderData) {
         }
         
         if (!messageSent && apiConfigured) {
-            return { success: false, error: 'Envoi WhatsApp échoué. Réessayez ou ouvrez le site via Live Server / npx serve (pas file://).' };
+            return { success: false, error: 'WhatsApp-verzending mislukt. Probeer opnieuw of open de site via Live Server / npx serve (niet file://).' };
         }
         
         if (!messageSent) {
@@ -328,7 +328,7 @@ async function processWhatsAppOrder(orderData, opts = {}) {
             checkoutBtn.disabled = false;
             checkoutBtn.innerHTML = originalText;
         }
-        const errorMsg = result.error || 'Une erreur est survenue lors de l\'envoi de la commande. Veuillez réessayer.';
+        const errorMsg = result.error || 'Er is een fout opgetreden bij het versturen van de bestelling. Probeer opnieuw.';
         alert(errorMsg);
         return result;
     } catch (error) {
@@ -336,9 +336,9 @@ async function processWhatsAppOrder(orderData, opts = {}) {
         const btn = document.getElementById('checkoutBtn');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = originalText || '<span>✅ Valider et envoyer la commande</span><span class="checkout-total">€0,00</span>';
+            btn.innerHTML = originalText || '<span>Bestelling bevestigen</span><span class="checkout-total">€0,00</span>';
         }
-        alert('Une erreur est survenue. Veuillez réessayer. Erreur: ' + error.message);
+        alert('Er is een fout opgetreden. Probeer opnieuw. Fout: ' + error.message);
         return { success: false, error: error.message };
     }
 }

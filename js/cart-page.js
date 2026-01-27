@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="quantity-btn" data-action="decrease" data-id="${item.id}">−</button>
                 <span class="quantity-value">${item.quantity}</span>
                 <button class="quantity-btn" data-action="increase" data-id="${item.id}">+</button>
-                <button class="remove-item-btn" data-id="${item.id}" aria-label="Supprimer">
+                <button class="remove-item-btn" data-id="${item.id}" aria-label="Verwijderen">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 5l10 10M15 5l-10 10"/>
                     </svg>
@@ -154,8 +154,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Order time restriction configuration (déclaré AVANT son utilisation)
     const ORDER_CONFIG = {
-        // Set to true to allow orders at any time (for simulation/testing)
-        SIMULATION_MODE: true,
+        // Set to true to allow orders at any time (mode test)
+        SIMULATION_MODE: false,
         // Allowed days: 4 = Thursday, 5 = Friday
         ALLOWED_DAYS: [4, 5],
         // Allowed hours: 00:00 to 08:30
@@ -249,10 +249,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Check if current day is allowed (Thursday = 4, Friday = 5)
         if (!ORDER_CONFIG.ALLOWED_DAYS.includes(currentDay)) {
-            const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+            const dayNames = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
             return {
                 allowed: false,
-                message: `Les commandes ne sont acceptées que le jeudi et vendredi de 00h à 8h30. Aujourd'hui est ${dayNames[currentDay]}.`
+                message: `Bestellingen worden alleen geaccepteerd op donderdag en vrijdag van 00u tot 8u30. Vandaag is ${dayNames[currentDay]}.`
             };
         }
 
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentTime < startTime || currentTime > endTime) {
             return {
                 allowed: false,
-                message: `Les commandes ne sont acceptées que le jeudi et vendredi de 00h à 8h30. Il est actuellement ${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}.`
+                message: `Bestellingen worden alleen geaccepteerd op donderdag en vrijdag van 00u tot 8u30. Het is nu ${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}.`
             };
         }
 
@@ -281,12 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const timeCheck = isOrderTimeAllowed();
-            if (!timeCheck.allowed) {
-                showAlert(timeCheck.message, '⏰');
-                return;
-            }
-            
             const deliveryName = document.getElementById('deliveryName');
             const deliveryClass = document.getElementById('deliveryClass');
             const deliverySchool = document.getElementById('deliverySchool');
@@ -308,6 +302,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!deliveryDate || !deliveryDate.value) {
                 showAlert('Selecteer een datum voor uw bestelling.', '📅');
                 deliveryDate?.focus();
+                return;
+            }
+            
+            // Verify that the selected delivery date is a Thursday or Friday
+            const selectedDate = new Date(deliveryDate.value);
+            const dayOfWeek = selectedDate.getDay();
+            if (dayOfWeek !== 4 && dayOfWeek !== 5) {
+                const dayNames = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
+                showAlert(`Bestellingen zijn alleen mogelijk op donderdag en vrijdag. De geselecteerde datum is ${dayNames[dayOfWeek]}.`, '📅');
                 return;
             }
             if (!paymentMethod) {

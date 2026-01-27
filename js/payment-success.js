@@ -1,14 +1,15 @@
 // Payment Success Page
+const API_BASE = 'https://delicorner-whatsapp.onrender.com';
+
 document.addEventListener('DOMContentLoaded', function() {
     var q = new URLSearchParams(window.location.search);
     if (q.get('whatsapp_failed') === '1') {
-        var fallback = 'Votre commande est bien enregistrée, mais la notification WhatsApp n\'a pas pu être envoyée à la sandwicherie. Contactez le 0488/153.993 pour confirmer.';
+        var fallback = 'Uw bestelling is geregistreerd, maar de WhatsApp-melding kon niet naar de broodjeszaak worden gestuurd. Bel 0488/153.993 om te bevestigen.';
         var msg = (typeof t === 'function' && t('paymentSuccess.whatsappFailed') && t('paymentSuccess.whatsappFailed') !== 'paymentSuccess.whatsappFailed')
             ? t('paymentSuccess.whatsappFailed') : fallback;
         alert(msg);
         history.replaceState({}, '', window.location.pathname);
     }
-    const q = new URLSearchParams(window.location.search);
     const orderCode = q.get('code') || q.get('order_code') || null;
     const orderData = localStorage.getItem('completed_order') || localStorage.getItem('pending_order');
     const orderSummary = document.getElementById('orderSummary');
@@ -30,6 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             renderOrderSummary(order, orderSummary);
+
+            // Préparer le bouton WhatsApp avec le code localStorage
+            setupWhatsappButton(order.orderNumber, order.delivery?.name || null);
             
             // Le message WhatsApp est maintenant envoyé automatiquement via Twilio
             // Plus besoin d'afficher la section pour que le client copie/envoye le message
@@ -48,16 +52,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // localStorage.removeItem('pending_order');
         } catch (e) {
             console.error('Error parsing order data:', e);
-            orderSummary.innerHTML = '<p>Merci pour votre commande !</p>';
+            orderSummary.innerHTML = '<p>Bedankt voor uw bestelling!</p>';
         }
     } else {
-        orderSummary.innerHTML = '<p>Merci pour votre commande !</p>';
+        orderSummary.innerHTML = '<p>Bedankt voor uw bestelling!</p>';
     }
 });
 
 async function fetchOrderFromApi(orderCode, container) {
     try {
-        const response = await fetch(`/api/orders/${orderCode}`);
+        const response = await fetch(`${API_BASE}/api/orders/${orderCode}`);
         if (!response.ok) {
             throw new Error('Impossible de récupérer la commande');
         }
@@ -87,13 +91,38 @@ async function fetchOrderFromApi(orderCode, container) {
 
         const orderNumberEl = document.getElementById('orderNumber');
         if (orderNumberEl) {
-            orderNumberEl.textContent = `Commande #${apiOrder.orderNumber}`;
+            orderNumberEl.textContent = `Bestelling #${apiOrder.orderNumber}`;
             orderNumberEl.style.display = 'block';
         }
 
         renderOrderSummary(apiOrder, container);
+
+        // Configurer le bouton WhatsApp avec les infos de l'API
+        setupWhatsappButton(apiOrder.orderNumber, apiOrder.delivery?.name || null);
     } catch (e) {
         console.error('Erreur lors du chargement de la commande depuis l’API:', e);
+    }
+}
+
+async function setupWhatsappButton(orderCode, customerName) {
+    try {
+        const btn = document.getElementById('whatsappButton');
+        if (!btn || !orderCode) return;
+
+        const res = await fetch(`${API_BASE}/api/config`);
+        if (!res.ok) throw new Error('Impossible de charger la configuration WhatsApp');
+        const cfg = await res.json();
+        const whatsappPhone = cfg.whatsappPhone || '32488153993';
+
+        const namePart = customerName ? `\nNom: ${customerName}` : '';
+        const text = encodeURIComponent(
+            `Bonjour, voici mon code de commande Delicorner: ${orderCode}.${namePart ? namePart : ''}`
+        );
+
+        btn.href = `https://wa.me/${whatsappPhone}?text=${text}`;
+        btn.style.display = 'inline-flex';
+    } catch (e) {
+        console.error('Erreur configuration bouton WhatsApp:', e);
     }
 }
 
@@ -127,9 +156,9 @@ function renderOrderSummary(order, container) {
         return sum + (parseFloat(item.price.replace(',', '.')) * item.quantity);
     }, 0);
 
-    const orderSummaryLabel = t('paymentSuccess.orderSummary') || 'Récapitulatif de votre commande';
-    const deliveryToLabel = t('paymentSuccess.deliveryTo') || 'Livraison à:';
-    const totalLabel = t('cart.total') || 'Total:';
+    const orderSummaryLabel = t('paymentSuccess.orderSummary') || 'Samenvatting van uw bestelling';
+    const deliveryToLabel = t('paymentSuccess.deliveryTo') || 'Leveringsgegevens:';
+    const totalLabel = t('cart.total') || 'Totaal:';
     
     container.innerHTML = `
         <div class="order-details">
@@ -142,11 +171,11 @@ function renderOrderSummary(order, container) {
             </div>
             ${order.delivery ? `
                 <div class="delivery-info">
-                    <h4>Informations de livraison:</h4>
+                    <h4>${deliveryToLabel}</h4>
                     <p>${order.delivery.name}<br>
-                    Classe: ${order.delivery.class || 'N/A'}<br>
-                    École: ${order.delivery.school || 'N/A'}<br>
-                    Tél: ${order.delivery.phone}${order.delivery.notes ? `<br>Remarques: ${order.delivery.notes}` : ''}</p>
+                    Klas: ${order.delivery.class || 'N/A'}<br>
+                    School: ${order.delivery.school || 'N/A'}<br>
+                    Tel: ${order.delivery.phone}${order.delivery.notes ? `<br>Opmerkingen: ${order.delivery.notes}` : ''}</p>
                 </div>
             ` : ''}
         </div>
