@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delicorner - Back-office Bestellingen</title>
+    <!-- Fonts alignées avec le site public -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #e63946;
-            --primary-dark: #c1121f;
-            --secondary: #f4a261;
-            --success: #2a9d8f;
+            /* Palette harmonisée avec delicornerhalle.be */
+            --primary: #d4a574;
+            --primary-dark: #b8915f;
+            --secondary: #8b4513;
+            --accent: #ff6b35;
+            --success: #2d8659;
             --warning: #e9c46a;
             --danger: #e76f51;
-            --dark: #1d3557;
-            --light: #f1faee;
+            --dark: #2c2c2c;
+            --light: #f8f6f2;
             --gray: #6c757d;
             --gray-light: #e9ecef;
         }
@@ -25,15 +31,15 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--gray-light);
+            font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-light, #f8f6f2);
             color: var(--dark);
             line-height: 1.6;
         }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             padding: 1rem 2rem;
             display: flex;
@@ -43,7 +49,8 @@
         }
 
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
+            font-family: 'Playfair Display', serif;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -53,6 +60,23 @@
             display: flex;
             gap: 1rem;
             align-items: center;
+        }
+
+        .new-orders-pill {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .new-orders-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffeb3b;
         }
 
         .refresh-btn {
@@ -204,6 +228,26 @@
 
         .orders-table tr:hover {
             background: var(--light);
+        }
+
+        .order-row-new {
+            background: #fff8e1;
+        }
+
+        .order-row-new:hover {
+            background: #ffefc3;
+        }
+
+        .badge-new {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: #ffeb3b;
+            color: #8a6d1c;
         }
 
         .orders-table tr:last-child td {
@@ -484,6 +528,10 @@
     <header class="header">
         <h1>🍽️ Delicorner Back-office</h1>
         <div class="header-actions">
+            <div class="new-orders-pill">
+                <span class="new-orders-dot" id="newOrdersDot" style="display:none;"></span>
+                <span id="newOrdersLabel">Geen nieuwe bestellingen</span>
+            </div>
             <span id="lastUpdate">Laatste update: --</span>
             <button class="refresh-btn" onclick="loadOrders()">🔄 Vernieuwen</button>
         </div>
@@ -603,9 +651,34 @@
         const API_BASE = window.location.origin;
         let currentOrderCode = null;
         let ordersCache = [];
+        let seenOrders = new Set();
+
+        function loadSeenOrdersFromStorage() {
+            try {
+                const raw = localStorage.getItem('delicorner_seen_orders');
+                if (raw) {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr)) {
+                        seenOrders = new Set(arr);
+                    }
+                }
+            } catch (e) {
+                console.warn('Kon gelezen bestellingen niet laden uit localStorage', e);
+            }
+        }
+
+        function saveSeenOrdersToStorage() {
+            try {
+                const arr = Array.from(seenOrders);
+                localStorage.setItem('delicorner_seen_orders', JSON.stringify(arr));
+            } catch (e) {
+                console.warn('Kon gelezen bestellingen niet opslaan in localStorage', e);
+            }
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            loadSeenOrdersFromStorage();
             loadStats();
             loadOrders();
             
@@ -656,6 +729,7 @@
                 if (data.success) {
                     ordersCache = data.orders;
                     renderOrders(data.orders);
+                    updateNewOrdersIndicator(data.orders);
                     document.getElementById('lastUpdate').textContent = 
                         `Laatste update: ${new Date().toLocaleTimeString('nl-BE')}`;
                 }
@@ -700,6 +774,20 @@
             }
         }
 
+        function updateNewOrdersIndicator(orders) {
+            const dot = document.getElementById('newOrdersDot');
+            const label = document.getElementById('newOrdersLabel');
+            const unseenCount = orders.filter(o => !seenOrders.has(o.orderCode)).length;
+
+            if (unseenCount > 0) {
+                dot.style.display = 'inline-block';
+                label.textContent = `${unseenCount} nieuwe bestelling${unseenCount > 1 ? 'en' : ''}`;
+            } else {
+                dot.style.display = 'none';
+                label.textContent = 'Geen nieuwe bestellingen';
+            }
+        }
+
         // Render orders table
         function renderOrders(orders) {
             const tbody = document.getElementById('ordersBody');
@@ -718,10 +806,13 @@
                 return;
             }
             
-            tbody.innerHTML = orders.map(order => `
-                <tr>
+            tbody.innerHTML = orders.map(order => {
+                const isNew = !seenOrders.has(order.orderCode);
+                return `
+                <tr class="${isNew ? 'order-row-new' : ''}">
                     <td>
                         <span class="order-code">${order.orderCode}</span>
+                        ${isNew ? '<span class="badge-new">NIEUW</span>' : ''}
                     </td>
                     <td>
                         <strong>${order.customer.name}</strong><br>
@@ -761,13 +852,19 @@
                         ` : ''}
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         // View order details
         function viewOrder(orderCode) {
             const order = ordersCache.find(o => o.orderCode === orderCode);
             if (!order) return;
+
+            // Mark as seen when opening details
+            seenOrders.add(orderCode);
+            saveSeenOrdersToStorage();
+            renderOrders(ordersCache);
+            updateNewOrdersIndicator(ordersCache);
             
             currentOrderCode = orderCode;
             document.getElementById('modalOrderCode').textContent = orderCode;
