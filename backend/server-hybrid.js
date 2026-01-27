@@ -511,11 +511,13 @@ app.patch('/api/orders/:code', adminAuth, (req, res) => {
 
 /**
  * DELETE /api/orders/:code
- * Supprimer une commande (soft delete - change status to cancelled) - back-office
+ * - Sans ?permanent=1 : annulation (soft delete, status = cancelled)
+ * - Avec ?permanent=1 : suppression définitive (DELETE) - pour enlever les commandes test
  */
 app.delete('/api/orders/:code', adminAuth, (req, res) => {
     try {
         const { code } = req.params;
+        const permanent = req.query.permanent === '1';
 
         const order = db.prepare('SELECT * FROM orders WHERE order_code = ?').get(code.toUpperCase());
 
@@ -523,6 +525,15 @@ app.delete('/api/orders/:code', adminAuth, (req, res) => {
             return res.status(404).json({
                 success: false,
                 error: `Commande ${code} non trouvée`
+            });
+        }
+
+        if (permanent) {
+            db.prepare('DELETE FROM orders WHERE order_code = ?').run(code.toUpperCase());
+            console.log(`🗑️ Commande ${code} supprimée définitivement`);
+            return res.json({
+                success: true,
+                message: `Commande ${code} supprimée définitivement`
             });
         }
 

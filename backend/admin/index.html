@@ -342,6 +342,15 @@
             background: var(--danger);
             color: white;
         }
+        .action-btn.delete-permanent {
+            border-color: #721c24;
+            color: #721c24;
+            margin-left: auto;
+        }
+        .action-btn.delete-permanent:hover {
+            background: #721c24;
+            color: white;
+        }
 
         /* Modal */
         .modal-overlay {
@@ -638,6 +647,9 @@
                 </button>
                 <button class="action-btn cancel" onclick="updateOrderStatus('cancelled')">
                     ❌ Annuleren
+                </button>
+                <button class="action-btn delete-permanent" onclick="deleteOrderPermanently()" title="Verwijder uit de database (voor testbestellingen)">
+                    🗑️ Definitief verwijderen
                 </button>
             </div>
         </div>
@@ -960,6 +972,30 @@
                 }
             } catch (error) {
                 showToast('Fout bij bijwerken', 'error');
+            }
+        }
+
+        // Definitief verwijderen (voor testbestellingen)
+        async function deleteOrderPermanently() {
+            if (!currentOrderCode) return;
+            if (!confirm('Weet u het zeker? Deze bestelling wordt permanent uit de database verwijderd. Deze actie kan niet ongedaan worden gemaakt.')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/orders/${currentOrderCode}?permanent=1`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`Bestelling ${currentOrderCode} definitief verwijderd`, 'success');
+                    closeModal();
+                    loadOrders();
+                    loadStats();
+                } else {
+                    showToast(data.error || 'Fout bij verwijderen', 'error');
+                }
+            } catch (error) {
+                showToast('Fout bij verwijderen', 'error');
             }
         }
 
