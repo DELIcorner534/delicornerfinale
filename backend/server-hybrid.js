@@ -28,7 +28,13 @@ const PORT = process.env.PORT || 3000;
 // Configuration
 const WHATSAPP_PHONE = process.env.WHATSAPP_PHONE || '32451032356';
 const ORDER_PREFIX = process.env.ORDER_PREFIX || 'DC';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'delicorner2026';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+    console.error('❌ ADMIN_PASSWORD n\'est pas défini dans les variables d\'environnement.');
+    console.error('   Merci de configurer ADMIN_PASSWORD (Render, .env, etc.) avant de démarrer.');
+    process.exit(1);
+}
 
 // Configuration Mollie (Bancontact)
 const MOLLIE_API_KEY = process.env.MOLLIE_API_KEY;
@@ -179,8 +185,29 @@ function formatOrderForResponse(order) {
 app.use(cors());
 app.use(express.json());
 
-// Servir les fichiers statiques du back-office
-app.use('/admin', express.static(path.join(__dirname, 'admin')));
+// Authentification basique pour le back-office et les routes d'administration
+function adminAuth(req, res, next) {
+    const authHeader = req.headers['authorization'] || '';
+    const [scheme, encoded] = authHeader.split(' ');
+
+    if (scheme !== 'Basic' || !encoded) {
+        res.set('WWW-Authenticate', 'Basic realm="Delicorner Back-office"');
+        return res.status(401).send('Authentification requise');
+    }
+
+    const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+    const [, password] = decoded.split(':'); // on ignore le login, seul le mot de passe compte
+
+    if (password !== ADMIN_PASSWORD) {
+        res.set('WWW-Authenticate', 'Basic realm="Delicorner Back-office"');
+        return res.status(401).send('Identifiants invalides');
+    }
+
+    next();
+}
+
+// Servir les fichiers statiques du back-office (protégés)
+app.use('/admin', adminAuth, express.static(path.join(__dirname, 'admin')));
 
 // Logging des requêtes
 app.use((req, res, next) => {
@@ -269,9 +296,9 @@ app.post('/api/orders', (req, res) => {
 
 /**
  * GET /api/orders/:code
- * Récupérer une commande par son code
+ * Récupérer une commande par son code (protégé pour le back-office)
  */
-app.get('/api/orders/:code', (req, res) => {
+app.get('/api/orders/:code', adminAuth, (req, res) => {
     try {
         const { code } = req.params;
 
@@ -300,9 +327,9 @@ app.get('/api/orders/:code', (req, res) => {
 
 /**
  * GET /api/orders
- * Liste des commandes (avec filtres optionnels)
+ * Liste des commandes (avec filtres optionnels) - back-office
  */
-app.get('/api/orders', (req, res) => {
+app.get('/api/orders', adminAuth, (req, res) => {
     try {
         const { status, date, limit = 50, offset = 0 } = req.query;
 
@@ -346,9 +373,9 @@ app.get('/api/orders', (req, res) => {
 
 /**
  * PATCH /api/orders/:code
- * Mettre à jour le statut d'une commande
+ * Mettre à jour le statut d'une commande (back-office)
  */
-app.patch('/api/orders/:code', (req, res) => {
+app.patch('/api/orders/:code', adminAuth, (req, res) => {
     try {
         const { code } = req.params;
         const { status, paymentStatus, whatsappSent } = req.body;
@@ -412,9 +439,9 @@ app.patch('/api/orders/:code', (req, res) => {
 
 /**
  * DELETE /api/orders/:code
- * Supprimer une commande (soft delete - change status to cancelled)
+ * Supprimer une commande (soft delete - change status to cancelled) - back-office
  */
-app.delete('/api/orders/:code', (req, res) => {
+app.delete('/api/orders/:code', adminAuth, (req, res) => {
     try {
         const { code } = req.params;
 
@@ -455,9 +482,9 @@ app.delete('/api/orders/:code', (req, res) => {
 
 /**
  * GET /api/stats
- * Statistiques des commandes
+ * Statistiques des commandes (back-office)
  */
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', adminAuth, (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
 
@@ -531,7 +558,7 @@ app.get('/api/config', (req, res) => {
  * GET /admin
  * Page d'accueil du back-office
  */
-app.get('/admin', (req, res) => {
+app.get('/admin', adminAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
 
