@@ -609,11 +609,11 @@
             loadStats();
             loadOrders();
             
-            // Auto-refresh every 30 seconds
+            // Auto-refresh every 20 seconds
             setInterval(() => {
                 loadOrders();
                 loadStats();
-            }, 30000);
+            }, 20000);
 
             // Search on Enter key
             document.getElementById('searchCode').addEventListener('keypress', (e) => {
