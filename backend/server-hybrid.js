@@ -178,11 +178,59 @@ function formatOrderForResponse(order) {
     };
 }
 
+/**
+ * Normalise et valide un numéro de GSM belge.
+ * Accepte par exemple : "0488/153.993", "0488 153 993", "+32488153993"
+ * Retourne un numéro au format local "0488153993" ou null si invalide.
+ */
+function normalizeBelgianMobile(phone) {
+    if (!phone || typeof phone !== 'string') return null;
+    const digits = phone.replace(/[^\d]/g, ''); // garde uniquement les chiffres
+
+    // 10 chiffres commençant par 0 (ex: 0488123456)
+    if (digits.length === 10 && /^0[4-9]\d{8}$/.test(digits)) {
+        return digits;
+    }
+
+    // 11 chiffres commençant par 32 (ex: 32488123456) → enlever 32, remettre 0
+    if (digits.length === 11 && digits.startsWith('32') && /^[0-9]+$/.test(digits)) {
+        const local = '0' + digits.slice(2);
+        if (/^0[4-9]\d{8}$/.test(local)) return local;
+    }
+
+    // 13 chiffres commençant par 0032 (ex: 0032488123456)
+    if (digits.length === 13 && digits.startsWith('0032')) {
+        const local = '0' + digits.slice(4);
+        if (/^0[4-9]\d{8}$/.test(local)) return local;
+    }
+
+    return null;
+}
+
 // ============================================================
 // MIDDLEWARE
 // ============================================================
 
-app.use(cors());
+// CORS : n'autoriser que les origines connues (site public + back-office + dev local)
+const ALLOWED_ORIGINS = [
+    'https://delicornerhalle.be',
+    'https://www.delicornerhalle.be',
+    'https://delicorner-whatsapp.onrender.com',
+    'http://localhost:3000'
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Les requêtes sans origin (ex: cURL, apps serveur) sont autorisées
+        if (!origin) return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, true);
+        }
+        console.warn('❌ Requête CORS refusée depuis', origin);
+        return callback(new Error('Origin non autorisée par CORS'));
+    }
+}));
+
 app.use(express.json());
 
 // Authentification basique pour le back-office et les routes d'administration
@@ -237,11 +285,20 @@ app.post('/api/orders', (req, res) => {
             notes 
         } = req.body;
 
-        // Validation
+        // Validation basique
         if (!customerName || !customerPhone || !items || !total) {
             return res.status(400).json({
                 success: false,
                 error: 'Champs requis manquants: customerName, customerPhone, items, total'
+            });
+        }
+
+        // Validation / normalisation du numéro de téléphone
+        const normalizedPhone = normalizeBelgianMobile(customerPhone);
+        if (!normalizedPhone) {
+            return res.status(400).json({
+                success: false,
+                error: 'Numéro de téléphone invalide. Exemple attendu: 0488 153 993'
             });
         }
 
@@ -259,7 +316,7 @@ app.post('/api/orders', (req, res) => {
         const result = stmt.run(
             orderCode,
             customerName,
-            customerPhone,
+            normalizedPhone,
             customerClass || null,
             customerSchool || null,
             deliveryDate || null,
@@ -648,6 +705,12 @@ app.post('/api/create-payment', async (req, res) => {
             return res.status(400).json({ error: 'Données de paiement invalides.' });
         }
 
+        // Validation / normalisation du numéro de téléphone de livraison
+        const normalizedPhone = normalizeBelgianMobile(delivery.phone || '');
+        if (!normalizedPhone) {
+            return res.status(400).json({ error: 'Numéro de téléphone invalide. Exemple: 0488 153 993' });
+        }
+
         // Générer le code de commande
         const orderCode = generateOrderCode();
 
@@ -663,7 +726,7 @@ app.post('/api/create-payment', async (req, res) => {
         stmt.run(
             orderCode,
             delivery.name || 'Client',
-            delivery.phone || '',
+            normalizedPhone,
             delivery.class || null,
             delivery.school || null,
             delivery.date || null,
