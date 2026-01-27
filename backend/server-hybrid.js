@@ -366,9 +366,11 @@ app.post('/api/orders', (req, res) => {
 
 /**
  * GET /api/orders/:code
- * Récupérer une commande par son code (protégé pour le back-office)
+ * Récupérer une commande par son code.
+ * Accessible publiquement pour permettre à la page de succès paiement
+ * d'afficher le récapitulatif exact de la commande.
  */
-app.get('/api/orders/:code', adminAuth, (req, res) => {
+app.get('/api/orders/:code', (req, res) => {
     try {
         const { code } = req.params;
 
@@ -812,6 +814,68 @@ app.post('/api/create-payment', async (req, res) => {
     } catch (error) {
         console.error('❌ Erreur Mollie:', error.response?.data || error.message);
         res.status(500).json({ error: 'Erreur lors de la création du paiement Mollie.' });
+    }
+});
+
+/**
+ * POST /api/create-payment-simulated
+ * Mode TEST: créer une commande payée sans passer par Mollie,
+ * puis renvoyer une URL de redirection directe vers la page de succès.
+ */
+app.post('/api/create-payment-simulated', (req, res) => {
+    try {
+        const { amount, items, delivery } = req.body || {};
+        if (typeof amount !== 'number' || !items || !delivery) {
+            return res.status(400).json({ error: 'Données de paiement invalides.' });
+        }
+
+        // Validation / normalisation du numéro de téléphone de livraison
+        const normalizedPhone = normalizeBelgianMobile(delivery.phone || '');
+        if (!normalizedPhone) {
+            return res.status(400).json({ error: 'Numéro de téléphone invalide. Exemple: 0488 153 993' });
+        }
+
+        // Générer le code de commande
+        const orderCode = generateOrderCode();
+
+        // Enregistrer la commande en base de données comme déjà payée/confirmée
+        const stmt = db.prepare(`
+            INSERT INTO orders (
+                order_code, customer_name, customer_phone, customer_class,
+                customer_school, delivery_date, items, total, payment_method, 
+                payment_status, status, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+            orderCode,
+            delivery.name || 'Client',
+            normalizedPhone,
+            delivery.class || null,
+            delivery.school || null,
+            delivery.date || null,
+            JSON.stringify(items),
+            amount,
+            'bancontact',
+            'paid',
+            'confirmed',
+            delivery.notes || null
+        );
+
+        console.log(`🧪 [SIMULATED] Commande ${orderCode} créée comme payée (sans Mollie)`);
+
+        // URL de redirection directe vers la page de succès publique
+        const successUrl = `https://delicornerhalle.be/payment-success.html?code=${encodeURIComponent(orderCode)}`;
+
+        res.json({
+            checkout_url: successUrl,
+            payment_id: null,
+            order_code: orderCode,
+            simulated: true
+        });
+    } catch (error) {
+        console.error('❌ Erreur create-payment-simulated:', error.message);
+        res.status(500).json({ error: 'Erreur lors de la création du paiement simulé.' });
     }
 });
 

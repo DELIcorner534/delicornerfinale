@@ -8,10 +8,15 @@ document.addEventListener('DOMContentLoaded', function() {
         alert(msg);
         history.replaceState({}, '', window.location.pathname);
     }
+    const q = new URLSearchParams(window.location.search);
+    const orderCode = q.get('code') || q.get('order_code') || null;
     const orderData = localStorage.getItem('completed_order') || localStorage.getItem('pending_order');
     const orderSummary = document.getElementById('orderSummary');
     
-    if (orderData) {
+    if (orderCode) {
+        // Version fiable: recharger la dernière commande depuis l'API
+        fetchOrderFromApi(orderCode, orderSummary);
+    } else if (orderData) {
         try {
             const order = JSON.parse(orderData);
             
@@ -49,6 +54,48 @@ document.addEventListener('DOMContentLoaded', function() {
         orderSummary.innerHTML = '<p>Merci pour votre commande !</p>';
     }
 });
+
+async function fetchOrderFromApi(orderCode, container) {
+    try {
+        const response = await fetch(`/api/orders/${orderCode}`);
+        if (!response.ok) {
+            throw new Error('Impossible de récupérer la commande');
+        }
+        const data = await response.json();
+        if (!data.success || !data.order) {
+            throw new Error('Commande non trouvée');
+        }
+
+        const apiOrder = {
+            orderNumber: data.order.orderCode,
+            items: data.order.items.map(item => ({
+                name: item.name,
+                quantity: item.quantity || 1,
+                price: String(item.price).replace('.', ','),
+                options: item.options || [],
+                sauce: item.sauce || null
+            })),
+            delivery: {
+                name: data.order.customer.name,
+                class: data.order.customer.class,
+                school: data.order.customer.school,
+                phone: data.order.customer.phone,
+                notes: data.order.notes
+            },
+            total: data.order.total
+        };
+
+        const orderNumberEl = document.getElementById('orderNumber');
+        if (orderNumberEl) {
+            orderNumberEl.textContent = `Commande #${apiOrder.orderNumber}`;
+            orderNumberEl.style.display = 'block';
+        }
+
+        renderOrderSummary(apiOrder, container);
+    } catch (e) {
+        console.error('Erreur lors du chargement de la commande depuis l’API:', e);
+    }
+}
 
 // Fonction supprimée : Le message WhatsApp est maintenant envoyé automatiquement via Twilio
 // Plus besoin d'afficher la section pour que le client copie/envoye le message

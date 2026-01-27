@@ -5,6 +5,7 @@ const MOLLIE_API_KEY = 'YOUR_MOLLIE_API_KEY'; // Deprecated: use backend API ins
 const PAYMENT_SUCCESS_URL = window.location.origin + '/payment-success.html';
 const PAYMENT_FAILURE_URL = window.location.origin + '/payment-failure.html';
 const MOLLIE_BACKEND_URL = 'https://delicorner-whatsapp.onrender.com/api/create-payment';
+const MOLLIE_BACKEND_SIM_URL = 'https://delicorner-whatsapp.onrender.com/api/create-payment-simulated';
 
 // Process Bancontact payment via Mollie API
 async function processBancontactPayment(orderData) {
@@ -78,11 +79,15 @@ async function processBancontactPayment(orderData) {
 // Alternative: Simple redirect to Mollie (backend creates payment)
 // opts: { skipStoreOrder: bool } — si true, ne pas écraser pending_order (WhatsApp déjà stocké)
 async function processBancontactPaymentSimple(orderData, opts = {}) {
+    const qs = new URLSearchParams(window.location.search);
+    const useSimulated = qs.get('simulate_payment') === '1';
+    const endpoint = useSimulated ? MOLLIE_BACKEND_SIM_URL : MOLLIE_BACKEND_URL;
+
     if (!opts.skipStoreOrder) {
         localStorage.setItem('pending_order', JSON.stringify({ ...orderData, orderNumber: orderData.orderNumber }));
     }
     
-    const res = await fetch(MOLLIE_BACKEND_URL, {
+    const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
