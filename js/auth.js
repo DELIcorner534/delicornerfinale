@@ -73,7 +73,7 @@ class Auth {
         };
         localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
 
-        return { success: true, message: 'Connexion réussie !', user: this.currentUser };
+        return { success: true, message: 'Succesvol ingelogd!', user: this.currentUser };
     }
 
     // Logout user

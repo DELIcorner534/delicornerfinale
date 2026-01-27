@@ -230,7 +230,7 @@ function updateNavigationUserLink() {
         const user = window.auth.getCurrentUser();
         userLink.innerHTML = `<a href="profile.html">👤 ${user.name}</a>`;
     } else {
-        userLink.innerHTML = '<a href="login.html">👤 Connexion</a>';
+        userLink.innerHTML = '<a href="login.html">👤 Inloggen</a>';
     }
 
     // Insert before cart link

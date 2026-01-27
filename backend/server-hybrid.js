@@ -42,16 +42,8 @@ const MOLLIE_REDIRECT_SUCCESS_URL = process.env.MOLLIE_REDIRECT_SUCCESS_URL || '
 const MOLLIE_REDIRECT_FAILURE_URL = process.env.MOLLIE_REDIRECT_FAILURE_URL || 'https://delicornerhalle.be/payment-failure.html';
 const MOLLIE_WEBHOOK_URL = process.env.MOLLIE_WEBHOOK_URL;
 
-// Token -> payment_id (pour payment-return via ?t=)
-const paymentTokens = new Map();
-const TOKEN_TTL_MS = 30 * 60 * 1000; // 30 min
-function cleanupTokens() {
-    const now = Date.now();
-    for (const [k, v] of paymentTokens.entries()) {
-        if (now - (v.createdAt || 0) > TOKEN_TTL_MS) paymentTokens.delete(k);
-    }
-}
-setInterval(cleanupTokens, 5 * 60 * 1000);
+// Durée de vie des tokens de paiement (en ms) lorsque stockés en base
+const TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 // ============================================================
 // BASE DE DONNÉES SQLite
@@ -88,9 +80,19 @@ db.exec(`
         counter INTEGER NOT NULL DEFAULT 0
     );
 
+    -- Tokens de paiement Mollie pour le retour / confirmation
+    CREATE TABLE IF NOT EXISTS payment_tokens (
+        token TEXT PRIMARY KEY,
+        payment_id TEXT NOT NULL,
+        order_code TEXT NOT NULL,
+        payload TEXT,
+        created_at TEXT DEFAULT (datetime('now', 'localtime'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_order_code ON orders(order_code);
     CREATE INDEX IF NOT EXISTS idx_status ON orders(status);
     CREATE INDEX IF NOT EXISTS idx_created_at ON orders(created_at);
+    CREATE INDEX IF NOT EXISTS idx_payment_tokens_created_at ON payment_tokens(created_at);
 `);
 
 // Initialiser le compteur si nécessaire
@@ -102,6 +104,17 @@ if (!counterRow) {
 } else if (counterRow.year !== currentYear) {
     // Réinitialiser le compteur au début de chaque année
     db.prepare('UPDATE order_counter SET year = ?, counter = 0 WHERE id = 1').run(currentYear);
+}
+
+// Nettoyer les anciens tokens de paiement (plus vieux que TOKEN_TTL_MS)
+try {
+    const cutoffSeconds = Math.floor(TOKEN_TTL_MS / 1000);
+    db.prepare(`
+        DELETE FROM payment_tokens
+        WHERE strftime('%s','now') - strftime('%s', created_at) > ?
+    `).run(cutoffSeconds);
+} catch (e) {
+    console.warn('⚠️ Impossible de nettoyer les anciens payment_tokens:', e.message);
 }
 
 console.log(`📦 Base de données initialisée: ${dbPath}`);
@@ -776,13 +789,16 @@ app.post('/api/create-payment', async (req, res) => {
             return res.status(500).json({ error: 'URL de paiement introuvable.' });
         }
 
-        // Stocker le token avec les infos de commande
-        paymentTokens.set(token, { 
-            payment_id: paymentId, 
-            order_code: orderCode,
-            order: { items, delivery, total: amount, orderNumber: orderCode },
-            createdAt: Date.now() 
-        });
+        // Stocker le token avec les infos de commande en base
+        db.prepare(`
+            INSERT INTO payment_tokens (token, payment_id, order_code, payload)
+            VALUES (?, ?, ?, ?)
+        `).run(
+            token,
+            paymentId,
+            orderCode,
+            JSON.stringify({ items, delivery, total: amount, orderNumber: orderCode })
+        );
 
         console.log(`💳 Paiement Mollie créé: ${paymentId} pour commande ${orderCode}`);
 
@@ -850,7 +866,10 @@ app.get('/api/payment-by-token', (req, res) => {
     const t = req.query.t;
     if (!t) return res.status(400).json({ error: 'Paramètre t manquant.' });
     
-    const entry = paymentTokens.get(t);
+    const entry = db.prepare(
+        'SELECT payment_id, order_code, created_at FROM payment_tokens WHERE token = ?'
+    ).get(t);
+
     if (!entry || !entry.payment_id) {
         return res.status(404).json({ error: 'Token invalide ou expiré.' });
     }
@@ -872,7 +891,10 @@ app.post('/api/confirm-and-send-whatsapp', async (req, res) => {
             return res.status(400).json({ error: 'Paramètre token manquant.', success: false });
         }
 
-        const entry = paymentTokens.get(token);
+        const entry = db.prepare(
+            'SELECT payment_id, order_code, payload, created_at FROM payment_tokens WHERE token = ?'
+        ).get(token);
+
         if (!entry || !entry.payment_id || !entry.order_code) {
             return res.status(404).json({ error: 'Token invalide ou expiré.', success: false });
         }
@@ -895,6 +917,9 @@ app.post('/api/confirm-and-send-whatsapp', async (req, res) => {
             SET payment_status = 'paid', status = 'confirmed', whatsapp_sent = 1, updated_at = datetime('now', 'localtime')
             WHERE order_code = ?
         `).run(order_code);
+
+        // Supprimer le token devenu inutile
+        db.prepare('DELETE FROM payment_tokens WHERE token = ?').run(token);
 
         // Récupérer la commande pour générer le lien WhatsApp
         const order = db.prepare('SELECT * FROM orders WHERE order_code = ?').get(order_code);

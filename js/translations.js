@@ -146,8 +146,8 @@ const translations = {
         },
         // Authentication
         auth: {
-            login: "Connexion",
-            loginSubtitle: "Connectez-vous à votre compte",
+            login: "Inloggen",
+            loginSubtitle: "Log in op uw account",
             register: "Inscription",
             registerSubtitle: "Créez votre compte pour suivre vos commandes",
             email: "Email *",
