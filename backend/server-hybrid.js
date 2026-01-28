@@ -405,24 +405,36 @@ app.get('/api/orders', adminAuth, (req, res) => {
     try {
         const { status, date, limit = 50, offset = 0 } = req.query;
 
-        let query = 'SELECT * FROM orders WHERE 1=1';
+        // Pour le back-office, on n'affiche que les commandes dont le paiement est réussi
+        // (payment_status = 'paid'). Les commandes test / échouées / annulées ne sont pas listées.
+        let baseQuery = "FROM orders WHERE payment_status = 'paid'";
+        const filters = [];
         const params = [];
+        const countParams = [];
 
         if (status) {
-            query += ' AND status = ?';
+            filters.push('status = ?');
             params.push(status);
+            countParams.push(status);
         }
 
         if (date) {
-            query += ' AND DATE(created_at) = ?';
+            filters.push('DATE(created_at) = ?');
             params.push(date);
+            countParams.push(date);
         }
 
-        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        if (filters.length > 0) {
+            baseQuery += ' AND ' + filters.join(' AND ');
+        }
+
+        const selectQuery = `SELECT * ${baseQuery} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
         params.push(parseInt(limit), parseInt(offset));
 
-        const orders = db.prepare(query).all(...params);
-        const totalCount = db.prepare('SELECT COUNT(*) as count FROM orders').get().count;
+        const countQuery = `SELECT COUNT(*) as count ${baseQuery}`;
+
+        const orders = db.prepare(selectQuery).all(...params);
+        const totalCount = db.prepare(countQuery).get(...countParams).count;
 
         res.json({
             success: true,
@@ -572,12 +584,13 @@ app.get('/api/stats', adminAuth, (req, res) => {
         const today = new Date().toISOString().split('T')[0];
 
         const stats = {
-            totalOrders: db.prepare('SELECT COUNT(*) as count FROM orders').get().count,
-            todayOrders: db.prepare('SELECT COUNT(*) as count FROM orders WHERE DATE(created_at) = ?').get(today).count,
-            pendingOrders: db.prepare("SELECT COUNT(*) as count FROM orders WHERE status = 'pending'").get().count,
-            confirmedOrders: db.prepare("SELECT COUNT(*) as count FROM orders WHERE status = 'confirmed'").get().count,
-            totalRevenue: db.prepare('SELECT COALESCE(SUM(total), 0) as sum FROM orders').get().sum,
-            todayRevenue: db.prepare('SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE DATE(created_at) = ?').get(today).sum
+            // Statistiques basées uniquement sur les commandes payées
+            totalOrders: db.prepare("SELECT COUNT(*) as count FROM orders WHERE payment_status = 'paid'").get().count,
+            todayOrders: db.prepare("SELECT COUNT(*) as count FROM orders WHERE payment_status = 'paid' AND DATE(created_at) = ?").get(today).count,
+            pendingOrders: db.prepare("SELECT COUNT(*) as count FROM orders WHERE payment_status = 'paid' AND status = 'pending'").get().count,
+            confirmedOrders: db.prepare("SELECT COUNT(*) as count FROM orders WHERE payment_status = 'paid' AND status = 'confirmed'").get().count,
+            totalRevenue: db.prepare("SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE payment_status = 'paid'").get().sum,
+            todayRevenue: db.prepare("SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE payment_status = 'paid' AND DATE(created_at) = ?").get(today).sum
         };
 
         res.json({
