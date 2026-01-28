@@ -176,20 +176,34 @@
             border-color: var(--primary);
         }
 
+        .search-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
         .search-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 0.75rem 2rem;
+            padding: 0.75rem 1.5rem;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.3s;
+        }
+
+        .search-btn.secondary {
+            background: var(--dark);
         }
 
         .search-btn:hover {
             background: var(--primary-dark);
+        }
+
+        .search-btn.secondary:hover {
+            background: #000;
         }
 
         /* Orders Table */
@@ -439,11 +453,11 @@
         }
 
         .modal-footer {
-            padding: 1rem 1.5rem;
-            background: var(--gray-light);
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
+        padding: 1rem 1.5rem;
+        background: var(--gray-light);
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
         }
 
         /* Loading */
@@ -530,7 +544,44 @@
 
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
-    </style>
+
+        /* Print styles for order ticket */
+        @media print {
+            body {
+                background: white;
+            }
+            .header,
+            .stats-grid,
+            .search-section,
+            .orders-section,
+            .toast {
+                display: none !important;
+            }
+            .print-ticket {
+                font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                font-size: 12px;
+                padding: 16px;
+            }
+            .print-ticket h1 {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+            .print-ticket h2 {
+                font-size: 14px;
+                margin: 12px 0 4px;
+            }
+            .print-ticket table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .print-ticket th,
+            .print-ticket td {
+                border-bottom: 1px solid #ddd;
+                padding: 4px 0;
+                text-align: left;
+            }
+        }
+        </style>
 </head>
 <body>
     <!-- Header -->
@@ -586,10 +637,21 @@
                 </select>
             </div>
             <div class="search-group">
+                <label for="filterSchool">School</label>
+                <select id="filterSchool">
+                    <option value="">Alle scholen</option>
+                    <option value="Campus Parklaan">Campus Parklaan</option>
+                    <option value="Campus Vondel">Campus Vondel</option>
+                </select>
+            </div>
+            <div class="search-group">
                 <label for="filterDate">Datum</label>
                 <input type="date" id="filterDate">
             </div>
-            <button class="search-btn" onclick="searchOrders()">🔍 Zoeken</button>
+            <div class="search-actions">
+                <button class="search-btn" onclick="searchOrders()">🔍 Zoeken</button>
+                <button class="search-btn secondary" onclick="printFilteredOrders()">🖨️ Lijst afdrukken / PDF</button>
+            </div>
         </div>
     </div>
 
@@ -648,6 +710,9 @@
                 <button class="action-btn cancel" onclick="updateOrderStatus('cancelled')">
                     ❌ Annuleren
                 </button>
+                <button class="action-btn" style="border-color: var(--primary); color: var(--primary);" onclick="printCurrentOrder()">
+                    🖨️ Afdrukken / PDF
+                </button>
                 <button class="action-btn delete-permanent" onclick="deleteOrderPermanently()" title="Verwijder uit de database (voor testbestellingen)">
                     🗑️ Definitief verwijderen
                 </button>
@@ -662,6 +727,7 @@
         // Configuration
         const API_BASE = window.location.origin;
         let currentOrderCode = null;
+        let currentOrderDetails = null;
         let ordersCache = [];
         let seenOrders = new Set();
 
@@ -730,6 +796,7 @@
             try {
                 const status = document.getElementById('filterStatus').value;
                 const date = document.getElementById('filterDate').value;
+                const school = document.getElementById('filterSchool').value;
                 
                 let url = `${API_BASE}/api/orders?limit=100`;
                 if (status) url += `&status=${status}`;
@@ -739,9 +806,14 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    ordersCache = data.orders;
-                    renderOrders(data.orders);
-                    updateNewOrdersIndicator(data.orders);
+                    let orders = data.orders || [];
+                    // Client-side filter by school if selected
+                    if (school) {
+                        orders = orders.filter(o => (o.customer && o.customer.school) === school);
+                    }
+                    ordersCache = orders;
+                    renderOrders(orders);
+                    updateNewOrdersIndicator(orders);
                     document.getElementById('lastUpdate').textContent = 
                         `Laatste update: ${new Date().toLocaleTimeString('nl-BE')}`;
                 }
@@ -879,6 +951,7 @@
             updateNewOrdersIndicator(ordersCache);
             
             currentOrderCode = orderCode;
+            currentOrderDetails = order;
             document.getElementById('modalOrderCode').textContent = orderCode;
             
             document.getElementById('modalBody').innerHTML = `
@@ -947,6 +1020,159 @@
         function closeModal() {
             document.getElementById('orderModal').classList.remove('active');
             currentOrderCode = null;
+            currentOrderDetails = null;
+        }
+
+        // Print / download current order as PDF via browser print dialog
+        function printCurrentOrder() {
+            if (!currentOrderDetails) {
+                showToast('Geen bestelling geselecteerd om af te drukken', 'error');
+                return;
+            }
+
+            const order = currentOrderDetails;
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                showToast('Pop-up geblokkeerd. Sta pop-ups toe om te kunnen afdrukken.', 'error');
+                return;
+            }
+
+            const itemsHtml = order.items.map(item => `
+                <tr>
+                    <td>${item.quantity}x ${item.name}</td>
+                    <td>
+                        ${item.options && item.options.length ? 'Opties: ' + item.options.map(o => o.name).join(', ') + '<br>' : ''}
+                        ${item.sauce && item.sauce.name ? 'Saus: ' + item.sauce.name : ''}
+                    </td>
+                    <td style="text-align:right;">€${item.price}</td>
+                </tr>
+            `).join('');
+
+            const html = `
+                <!DOCTYPE html>
+                <html lang="nl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Bestelling ${order.orderCode}</title>
+                </head>
+                <body onload="window.print(); window.close();">
+                    <div class="print-ticket">
+                        <h1>Delicorner</h1>
+                        <p><strong>Bestelcode:</strong> ${order.orderCode}</p>
+                        <p><strong>Datum:</strong> ${formatDateTime(order.createdAt)}</p>
+                        <p><strong>Leveringsdatum:</strong> ${order.deliveryDate || 'Niet gespecificeerd'}</p>
+
+                        <h2>Klant</h2>
+                        <p>
+                            ${order.customer.name}<br>
+                            Tel: ${order.customer.phone}<br>
+                            School: ${order.customer.school || 'N/A'} - Klas: ${order.customer.class || 'N/A'}
+                        </p>
+
+                        <h2>Artikelen</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Details</th>
+                                    <th style="text-align:right;">Prijs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                        </table>
+
+                        <h2 style="text-align:right; margin-top:12px;">
+                            Totaal: €${order.total.toFixed(2).replace('.', ',')}
+                        </h2>
+
+                        <p><strong>Betaalmethode:</strong> ${order.paymentMethod || 'N/A'}</p>
+                        ${order.notes ? `<p><strong>Opmerkingen:</strong> ${order.notes}</p>` : ''}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
+
+        // Print all currently gefilterde bestellingen (school, datum, status)
+        function printFilteredOrders() {
+            if (!ordersCache || ordersCache.length === 0) {
+                showToast('Geen bestellingen om af te drukken voor deze filters', 'error');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                showToast('Pop-up geblokkeerd. Sta pop-ups toe om te kunnen afdrukken.', 'error');
+                return;
+            }
+
+            const rowsHtml = ordersCache.map(order => {
+                const itemsSummary = order.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+                return `
+                    <tr>
+                        <td>${order.orderCode}</td>
+                        <td>${order.customer.name}<br>
+                            <small>${order.customer.school || ''} ${order.customer.class || ''}</small>
+                        </td>
+                        <td>${itemsSummary}</td>
+                        <td style="text-align:right;">€${order.total.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const school = document.getElementById('filterSchool').value || 'Alle scholen';
+            const date = document.getElementById('filterDate').value || 'Alle dagen';
+            const status = document.getElementById('filterStatus').value || 'Alle statussen';
+
+            const html = `
+                <!DOCTYPE html>
+                <html lang="nl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Overzicht bestellingen</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 12px; padding: 16px; }
+                        h1 { font-size: 16px; margin-bottom: 4px; }
+                        h2 { font-size: 14px; margin: 8px 0 4px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                        th, td { border-bottom: 1px solid #ccc; padding: 4px; text-align: left; }
+                        th { background: #f2f2f2; }
+                        .meta { font-size: 11px; color: #555; }
+                    </style>
+                </head>
+                <body onload="window.print(); window.close();">
+                    <h1>Delicorner - Overzicht bestellingen</h1>
+                    <div class="meta">
+                        Aangemaakt op: ${new Date().toLocaleString('nl-BE')}<br>
+                        School: ${school} - Datum: ${date} - Status: ${status}<br>
+                        Aantal bestellingen: ${ordersCache.length}
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Klant / School</th>
+                                <th>Artikelen</th>
+                                <th style="text-align:right;">Totaal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
 
         // Update order status
