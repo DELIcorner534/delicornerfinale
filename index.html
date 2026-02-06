@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="nl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Delicorner - Ambachtelijke broodjeszaak met verse kwaliteitsproducten. Ruim assortiment broodjes, panini en specialiteiten.">
+    <title>Delicorner - Ambachtelijke Broodjes</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="logo">
+                        <a href="index.html">
+                            <span class="logo-text">DELI<span class="logo-accent">CORNER</span></span>
+                            <span class="halal-badge">HALAL</span>
+                        </a>
+                    </div>
+                    <div class="nav-right">
+                        <!-- Mobile Cart Icon (visible on mobile only) -->
+                        <a href="cart.html" class="mobile-cart-icon" id="mobileCartIcon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span class="mobile-cart-count" id="mobileCartCount">0</span>
+                        </a>
+                        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <ul class="nav-menu">
+                            <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                            <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                            <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                            <li><a href="cart.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                                <span id="cartCount" class="cart-count" style="display: none;">0</span>
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section with Real Image -->
+    <section class="hero">
+        <div class="hero-bg-image" style="background-image: url('https://images.unsplash.com/photo-1509722747041-616f39b57569?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-particles"></div>
+        <div class="hero-content">
+            <h1 class="hero-title" data-i18n="hero.title">Delicorner</h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">Des sandwiches artisanaux préparés avec passion</p>
+            <p class="hero-description" data-i18n="hero.description">Fraîcheur, qualité et authenticité dans chaque bouchée</p>
+            <div class="hero-buttons">
+                <a href="menu.html" class="btn btn-primary" data-i18n="hero.ctaMenu">Découvrir le menu</a>
+                <a href="contact.html" class="btn btn-secondary" data-i18n="hero.ctaContact">Nous contacter</a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span data-i18n="hero.scroll">Découvrir</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card feature-card-with-bg" data-aos="fade-up" data-aos-delay="100">
+                    <h3 data-i18n="features.fresh">Produits Frais</h3>
+                    <p data-i18n="features.freshDesc">Des ingrédients sélectionnés avec soin pour garantir la fraîcheur et la qualité</p>
+                </div>
+                <div class="feature-card feature-card-halal" data-aos="fade-up" data-aos-delay="200">
+                    <h3 data-i18n="features.halal">Certifié Halal</h3>
+                    <p data-i18n="features.halalDesc">Respect strict des normes halal pour votre tranquillité d'esprit</p>
+                </div>
+                <div class="feature-card feature-card-homemade" data-aos="fade-up" data-aos-delay="300">
+                    <h3 data-i18n="features.homemade">Fait Maison</h3>
+                    <p data-i18n="features.homemadeDesc">Chaque sandwich est préparé sur commande selon nos recettes artisanales</p>
+                </div>
+                <div class="feature-card feature-card-passion" data-aos="fade-up" data-aos-delay="400">
+                    <h3 data-i18n="features.passion">Avec Passion</h3>
+                    <p data-i18n="features.passionDesc">Un savoir-faire transmis et une passion pour la gastronomie belge</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Preview Section -->
+    <section class="menu-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2 data-i18n="menuPreview.title">Nos Spécialités</h2>
+                <p data-i18n="menuPreview.subtitle">Découvrez nos catégories de sandwiches</p>
+            </div>
+            <div class="menu-categories">
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="category-image" style="background-image: url('images/basics-preview.png');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.basics">The Basics</h3>
+                    <p data-i18n="menuPreview.basicsDesc">Nos classiques, simples et délicieux</p>
+                    <a href="menu.html#basics" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="category-image" style="background-image: url('images/classics-preview.png');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.classics">The Classics</h3>
+                    <p data-i18n="menuPreview.classicsDesc">Les incontournables de la maison</p>
+                    <a href="menu.html#classics" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="category-image" style="background-image: url('images/warme-preview.png');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.warme">Warme Broodjes</h3>
+                    <p data-i18n="menuPreview.warmeDesc">Sandwiches chauds réconfortants</p>
+                    <a href="menu.html#warme" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+                <div class="category-card" data-aos="zoom-in" data-aos-delay="400">
+                    <div class="category-image" style="background-image: url('images/panini-preview.png');">
+                        <div class="category-overlay"></div>
+                    </div>
+                    <h3 data-i18n="menuPreview.panini">Panini</h3>
+                    <p data-i18n="menuPreview.paniniDesc">Grillés et savoureux</p>
+                    <a href="menu.html#panini" class="category-link" data-i18n="menuPreview.seeMenu">Voir le menu →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2 data-i18n="cta.ready">Prêt à déguster ?</h2>
+                <p data-i18n="cta.visit">Venez nous rendre visite ou contactez-nous pour une commande</p>
+                <div class="cta-buttons">
+                    <a href="menu.html" class="btn btn-primary" data-i18n="cta.seeMenu">Voir le menu complet</a>
+                    <a href="contact.html" class="btn btn-outline" data-i18n="nav.contact">Nous contacter</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Delicorner</h3>
+                    <p data-i18n="footer.tagline">Votre sandwicherie artisanale préférée</p>
+                    <div class="halal-badge-footer" data-i18n="footer.certified">HALAL CERTIFIÉ</div>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.navigation">Navigation</h4>
+                    <ul>
+                        <li><a href="index.html" data-i18n="nav.home">Accueil</a></li>
+                        <li><a href="menu.html" data-i18n="nav.menu">Menu</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">À propos</a></li>
+                        <li><a href="contact.html" data-i18n="nav.contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.contact">Contact</h4>
+                    <ul>
+                        <li>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span data-i18n="contact.addressValue">Cypriaan Verhavertstraat 156, 1500 Halle</span>
+                        </li>
+                        <li>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                            <a href="tel:+32488153993" data-i18n="contact.phoneValue">0488/153.993</a>
+                        </li>
+                        <li>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <a href="mailto:sisidelicorner@gmail.com">sisidelicorner@gmail.com</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer.hours">Horaires</h4>
+                    <ul>
+                        <li data-i18n="footer.weekdays">Lun - Mar: 7h - 17h</li>
+                        <li data-i18n="footer.wednesday">Mer: 7h - 14h</li>
+                        <li data-i18n="footer.thuFri">Jeu - Ven: 7h - 17h</li>
+                        <li data-i18n="footer.weekend">Sam - Dim: Fermé</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.rights">&copy; 2026 Delicorner. Alle rechten voorbehouden. — Site door Amou.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Mobile Cart Button -->
+    <a href="cart.html" class="floating-cart" id="floatingCart">
+        <span class="floating-cart-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+        </span>
+        <span class="floating-cart-count" id="floatingCartCount">0</span>
+    </a>
+
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
