@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add item multiple times based on quantity
             for (let i = 0; i < currentQuantity; i++) {
                 // Generate unique ID for each item (especially if options or sauce are selected)
-                const uniqueId = hasCustomOptions 
+                const uniqueId = hasCustomOptions
                     ? itemId + '-' + Date.now() + '-' + i + '-' + Math.random().toString(36).substr(2, 9)
                     : itemId;
                 
