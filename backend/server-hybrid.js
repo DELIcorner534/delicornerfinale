@@ -581,7 +581,7 @@ app.post('/api/create-payment', async (req, res) => {
  * Mode TEST: créer une commande payée sans passer par Mollie,
  * puis renvoyer une URL de redirection directe vers la page de succès.
  */
-app.post('/api/create-payment-simulated', (req, res) => {
+app.post('/api/create-payment-simulated', async (req, res) => {
     try {
         const { amount, items, delivery } = req.body || {};
         if (typeof amount !== 'number' || !items || !delivery) {
