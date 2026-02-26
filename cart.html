@@ -197,6 +197,15 @@
                             </label>
                         </div>
 
+                        <!-- Mode test : paiement simulé (aucun paiement réel) -->
+                        <div id="testModeNotice" class="test-mode-notice" style="display: none;">
+                            <span class="test-mode-badge">🧪 Mode test</span>
+                            <span class="test-mode-text">Aucun paiement réel. La commande sera enregistrée directement.</span>
+                        </div>
+                        <p id="enableTestModeLink" class="test-mode-link" style="display: none;">
+                            <a href="cart.html?simulate_payment=1" style="font-size: 0.85rem; color: var(--primary, #d4a574);">→ Passer en mode test (simuler une commande)</a>
+                        </p>
+
                         <button type="submit" class="btn btn-primary btn-checkout" id="checkoutBtn">
                             <span>Bestelling bevestigen</span>
                             <span class="checkout-total">€0,00</span>

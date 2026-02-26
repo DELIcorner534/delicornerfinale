@@ -6,6 +6,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const cart = window.delicornerCart;
 
+    // Mode test : afficher le badge ou le lien pour l'activer
+    const qs = new URLSearchParams(window.location.search);
+    const isTestMode = qs.get('simulate_payment') === '1';
+    const testModeNotice = document.getElementById('testModeNotice');
+    const enableTestModeLink = document.getElementById('enableTestModeLink');
+    if (testModeNotice && enableTestModeLink) {
+        if (isTestMode) {
+            testModeNotice.style.display = 'block';
+        } else {
+            enableTestModeLink.style.display = 'block';
+        }
+    }
+
     // Custom Alert Function
     function showAlert(message, icon = '⚠️') {
         const alertOverlay = document.getElementById('customAlert');

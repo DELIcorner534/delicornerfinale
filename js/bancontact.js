@@ -107,6 +107,15 @@ async function processBancontactPaymentSimple(orderData, opts = {}) {
                 document.cookie = 'mollie_payment_id=' + encodeURIComponent(data.payment_id) + '; path=/; domain=' + d + '; max-age=600; SameSite=Lax';
             } catch (_) {}
         }
+        // Mettre à jour pending_order avec le vrai order_code du backend (DC-2026-XXXX)
+        // pour que payment-success affiche le bon numéro et que le client envoie le bon code sur WhatsApp.
+        if (data.order_code && !opts.skipStoreOrder) {
+            try {
+                var pending = JSON.parse(localStorage.getItem('pending_order') || '{}');
+                pending.orderNumber = data.order_code;
+                localStorage.setItem('pending_order', JSON.stringify(pending));
+            } catch (_) {}
+        }
         if (window.delicornerCart) window.delicornerCart.clearCart();
         window.location.href = data.checkout_url;
         return;

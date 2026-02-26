@@ -2452,6 +2452,29 @@ p {
     color: var(--secondary-color);
 }
 
+.test-mode-notice {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: rgba(234, 179, 8, 0.15);
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.test-mode-badge {
+    font-weight: 600;
+    color: #b45309;
+}
+.test-mode-text {
+    font-size: 0.9rem;
+    color: var(--text-color, #333);
+}
+.test-mode-link {
+    margin-bottom: 1rem;
+}
+
 .summary-divider {
     border: none;
     border-top: 1px solid var(--border-color);
