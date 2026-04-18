@@ -114,9 +114,9 @@ async function setupWhatsappButton(orderCode, customerName) {
         const cfg = await res.json();
         const whatsappPhone = cfg.whatsappPhone || '32488153993';
 
-        const namePart = customerName ? `\nNom: ${customerName}` : '';
+        const namePart = customerName ? ` Naam: ${customerName}` : '';
         const text = encodeURIComponent(
-            `Bonjour, voici mon code de commande Delicorner: ${orderCode}.${namePart ? namePart : ''}`
+            `Hallo, hierbij mijn Delicorner-bestelcode: ${orderCode}.${namePart}`
         );
 
         btn.href = `https://wa.me/${whatsappPhone}?text=${text}`;
