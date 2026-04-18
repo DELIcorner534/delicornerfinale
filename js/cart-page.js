@@ -169,8 +169,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const ORDER_CONFIG = {
         // Set to true to allow orders at any time (mode test)
         SIMULATION_MODE: false,
-        // Allowed days: 4 = Thursday, 5 = Friday
-        ALLOWED_DAYS: [4, 5],
+        // Allowed days: 1 = Monday ... 5 = Friday
+        ALLOWED_DAYS: [1, 2, 3, 4, 5],
         // Allowed hours: 00:00 to 08:30
         START_HOUR: 0,
         START_MINUTE: 0,
@@ -178,35 +178,25 @@ document.addEventListener('DOMContentLoaded', function() {
         END_MINUTE: 30
     };
 
-    // Setup date picker for advance orders (only Thursday and Friday)
+    // Setup date picker for advance orders (Monday to Friday)
     const deliveryDateInput = document.getElementById('deliveryDate');
     if (deliveryDateInput) {
         // Get today's date
         const today = new Date();
         
-        // Function to get next valid order day (Thursday=4 or Friday=5)
+        // Function to get next valid order day (Monday=1 to Friday=5)
         function getNextOrderDay(date) {
             const day = date.getDay();
-            // Find next Thursday or Friday
-            if (day === 0) { // Sunday -> Thursday (+4)
-                date.setDate(date.getDate() + 4);
-            } else if (day === 1) { // Monday -> Thursday (+3)
-                date.setDate(date.getDate() + 3);
-            } else if (day === 2) { // Tuesday -> Thursday (+2)
-                date.setDate(date.getDate() + 2);
-            } else if (day === 3) { // Wednesday -> Thursday (+1)
+            // If weekend, move to next Monday
+            if (day === 0) { // Sunday -> Monday (+1)
                 date.setDate(date.getDate() + 1);
-            } else if (day === 4) { // Thursday -> OK
-                // Already Thursday, keep it
-            } else if (day === 5) { // Friday -> OK
-                // Already Friday, keep it
-            } else if (day === 6) { // Saturday -> Thursday (+5)
-                date.setDate(date.getDate() + 5);
+            } else if (day === 6) { // Saturday -> Monday (+2)
+                date.setDate(date.getDate() + 2);
             }
             return date;
         }
         
-        // Set minimum date to next Thursday or Friday
+        // Set minimum date to next Monday-Friday slot
         const minDate = getNextOrderDay(new Date(today));
         
         // Set maximum date to 1 month from now
@@ -218,16 +208,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         deliveryDateInput.min = formatDate(minDate);
         deliveryDateInput.max = formatDate(maxDate);
-        deliveryDateInput.value = formatDate(minDate); // Default to next Thursday/Friday
+        deliveryDateInput.value = formatDate(minDate); // Default to next valid weekday
         
-        // Validate that selected date is Thursday or Friday only
+        // Validate that selected date is Monday to Friday only
         deliveryDateInput.addEventListener('change', function() {
             const selectedDate = new Date(this.value);
             const dayOfWeek = selectedDate.getDay();
             
-            // Only allow Thursday (4) and Friday (5)
-            if (dayOfWeek !== 4 && dayOfWeek !== 5) {
-                showAlert('Bestellingen zijn alleen mogelijk op donderdag en vrijdag.', '📅');
+            // Only allow weekdays (Monday=1 to Friday=5)
+            if (dayOfWeek < 1 || dayOfWeek > 5) {
+                showAlert('Bestellingen zijn alleen mogelijk van maandag tot vrijdag.', '📅');
                 this.value = formatDate(minDate);
             }
         });
@@ -253,19 +243,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const now = new Date();
-        const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 4 = Thursday, 5 = Friday
+        const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, ... 5 = Friday, 6 = Saturday
         const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         const currentTime = currentHour * 60 + currentMinute; // Convert to minutes for easier comparison
         const startTime = ORDER_CONFIG.START_HOUR * 60 + ORDER_CONFIG.START_MINUTE; // 00:00 = 0
         const endTime = ORDER_CONFIG.END_HOUR * 60 + ORDER_CONFIG.END_MINUTE; // 08:30 = 510
 
-        // Check if current day is allowed (Thursday = 4, Friday = 5)
+        // Check if current day is allowed (Monday to Friday)
         if (!ORDER_CONFIG.ALLOWED_DAYS.includes(currentDay)) {
             const dayNames = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
             return {
                 allowed: false,
-                message: `Bestellingen worden alleen geaccepteerd op donderdag en vrijdag van 00u tot 8u30. Vandaag is ${dayNames[currentDay]}.`
+                message: `Bestellingen worden alleen geaccepteerd van maandag tot vrijdag van 00u tot 8u30. Vandaag is ${dayNames[currentDay]}.`
             };
         }
 
@@ -273,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentTime < startTime || currentTime > endTime) {
             return {
                 allowed: false,
-                message: `Bestellingen worden alleen geaccepteerd op donderdag en vrijdag van 00u tot 8u30. Het is nu ${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}.`
+                message: `Bestellingen worden alleen geaccepteerd van maandag tot vrijdag van 00u tot 8u30. Het is nu ${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}.`
             };
         }
 
@@ -318,12 +308,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Verify that the selected delivery date is a Thursday or Friday
+            // Verify that the selected delivery date is a weekday (Monday to Friday)
             const selectedDate = new Date(deliveryDate.value);
             const dayOfWeek = selectedDate.getDay();
-            if (dayOfWeek !== 4 && dayOfWeek !== 5) {
+            if (dayOfWeek < 1 || dayOfWeek > 5) {
                 const dayNames = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
-                showAlert(`Bestellingen zijn alleen mogelijk op donderdag en vrijdag. De geselecteerde datum is ${dayNames[dayOfWeek]}.`, '📅');
+                showAlert(`Bestellingen zijn alleen mogelijk van maandag tot vrijdag. De geselecteerde datum is ${dayNames[dayOfWeek]}.`, '📅');
                 return;
             }
             if (!paymentMethod) {
