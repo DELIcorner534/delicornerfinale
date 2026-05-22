@@ -196,8 +196,8 @@
                                     </div>
                                 </div>
                             </label>
-                            <label class="payment-method" for="payment-cash" id="payment-cash-option" style="display: none;">
-                                <input type="radio" id="payment-cash" name="payment_method" value="cash">
+                            <label class="payment-method payment-method--disabled" for="payment-cash" id="payment-cash-option">
+                                <input type="radio" id="payment-cash" name="payment_method" value="cash" disabled>
                                 <div class="payment-method-content">
                                     <div class="payment-icon">💵</div>
                                     <div>
@@ -207,7 +207,7 @@
                                 </div>
                             </label>
                         </div>
-                        <p id="pacapimCashHint" class="form-hint" style="display: none; margin-top: 0.5rem;">
+                        <p id="pacapimCashHint" class="form-hint" style="margin-top: 0.5rem;">
                             Kies <strong>Pacapim</strong> bij School om contant te betalen.
                         </p>
 
@@ -296,7 +296,37 @@
     <script src="js/cart.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/whatsapp-order.js"></script>
-    <script src="js/cart-page.js"></script>
+    <script src="js/cart-page.js?v=20260522"></script>
+    <script>
+    (function () {
+        function delicornerSyncCashPayment(school) {
+            var isPacapim = school === 'Pacapim';
+            var cashInput = document.getElementById('payment-cash');
+            var cashLabel = document.getElementById('payment-cash-option');
+            var hint = document.getElementById('pacapimCashHint');
+            var bancontact = document.getElementById('payment-bancontact');
+            if (cashLabel) {
+                cashLabel.style.display = 'block';
+                cashLabel.classList.toggle('payment-method--disabled', !isPacapim);
+            }
+            if (cashInput) cashInput.disabled = !isPacapim;
+            if (hint) hint.style.display = isPacapim ? 'none' : 'block';
+            if (!isPacapim && bancontact) {
+                bancontact.checked = true;
+                bancontact.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        window.delicornerSyncCashPayment = delicornerSyncCashPayment;
+        document.addEventListener('DOMContentLoaded', function () {
+            var schoolSelect = document.getElementById('deliverySchool');
+            if (!schoolSelect) return;
+            schoolSelect.addEventListener('change', function () {
+                delicornerSyncCashPayment(this.value);
+            });
+            delicornerSyncCashPayment(schoolSelect.value);
+        });
+    })();
+    </script>
     <script src="js/bancontact.js"></script>
     <script src="js/translations.js"></script>
     <script src="js/i18n.js"></script>

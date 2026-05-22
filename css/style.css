@@ -2513,6 +2513,16 @@ p {
     background: var(--bg-light);
 }
 
+.payment-method--disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.payment-method--disabled:hover {
+    border-color: var(--border-color);
+    background: transparent;
+}
+
 .payment-method input[type="radio"] {
     display: none;
 }

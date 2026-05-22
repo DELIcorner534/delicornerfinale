@@ -234,10 +234,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updatePaymentOptionsForSchool(school) {
+        if (typeof window.delicornerSyncCashPayment === 'function') {
+            window.delicornerSyncCashPayment(school);
+            return;
+        }
         const isPacapim = school === 'Pacapim';
         if (paymentCashOption) {
-            paymentCashOption.style.display = isPacapim ? 'block' : 'none';
+            paymentCashOption.style.display = 'block';
+            paymentCashOption.classList.toggle('payment-method--disabled', !isPacapim);
         }
+        if (paymentCashInput) paymentCashInput.disabled = !isPacapim;
         if (!isPacapim && paymentBancontactInput) {
             paymentBancontactInput.checked = true;
             setActivePaymentMethod(paymentBancontactInput);
@@ -256,8 +262,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     document.querySelectorAll('.payment-method').forEach(function(label) {
-        label.addEventListener('click', function() {
+        label.addEventListener('click', function(e) {
             const input = label.querySelector('input[name="payment_method"]');
+            if (input && input.disabled) {
+                e.preventDefault();
+                showAlert('Kies eerst Pacapim bij School om contant te betalen.', '💵');
+                return;
+            }
             if (input) setActivePaymentMethod(input);
         });
     });
