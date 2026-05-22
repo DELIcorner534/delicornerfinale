@@ -47,6 +47,9 @@ const MOLLIE_WEBHOOK_URL = process.env.MOLLIE_WEBHOOK_URL;
 // Durée de vie des tokens de paiement (en ms) lorsque stockés en base
 const TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
+// Admin : Bancontact payé + commandes contant (Pacapim) — pas les Bancontact non payés
+const ADMIN_VISIBLE_ORDERS_SQL = "(payment_status = 'paid' OR LOWER(COALESCE(payment_method, '')) = 'cash')";
+
 // ============================================================
 // BASE DE DONNÉES PostgreSQL (Supabase)
 // ============================================================
@@ -293,7 +296,7 @@ app.get('/api/orders/:code', async (req, res) => {
 app.get('/api/orders', adminAuth, async (req, res) => {
     try {
         const { status, date, limit = 50, offset = 0 } = req.query;
-        let baseQuery = "FROM orders WHERE payment_status = 'paid'";
+        let baseQuery = `FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL}`;
         const filters = [];
         const params = [];
         let p = 1;
@@ -388,12 +391,12 @@ app.delete('/api/orders/:code', adminAuth, async (req, res) => {
 app.get('/api/stats', adminAuth, async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
-        const totalOrders = (await queryOne("SELECT COUNT(*)::int as count FROM orders WHERE payment_status = 'paid'")).count;
-        const todayOrders = (await queryOne("SELECT COUNT(*)::int as count FROM orders WHERE payment_status = 'paid' AND DATE(created_at) = $1", [today])).count;
-        const pendingOrders = (await queryOne("SELECT COUNT(*)::int as count FROM orders WHERE payment_status = 'paid' AND status = 'pending'")).count;
-        const confirmedOrders = (await queryOne("SELECT COUNT(*)::int as count FROM orders WHERE payment_status = 'paid' AND status = 'confirmed'")).count;
-        const totalRevenue = parseFloat((await queryOne("SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE payment_status = 'paid'")).sum);
-        const todayRevenue = parseFloat((await queryOne("SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE payment_status = 'paid' AND DATE(created_at) = $1", [today])).sum);
+        const totalOrders = (await queryOne(`SELECT COUNT(*)::int as count FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL}`)).count;
+        const todayOrders = (await queryOne(`SELECT COUNT(*)::int as count FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL} AND DATE(created_at) = $1`, [today])).count;
+        const pendingOrders = (await queryOne(`SELECT COUNT(*)::int as count FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL} AND status = 'pending'`)).count;
+        const confirmedOrders = (await queryOne(`SELECT COUNT(*)::int as count FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL} AND status = 'confirmed'`)).count;
+        const totalRevenue = parseFloat((await queryOne(`SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL}`)).sum);
+        const todayRevenue = parseFloat((await queryOne(`SELECT COALESCE(SUM(total), 0) as sum FROM orders WHERE ${ADMIN_VISIBLE_ORDERS_SQL} AND DATE(created_at) = $1`, [today])).sum);
 
         res.json({ success: true, stats: { totalOrders, todayOrders, pendingOrders, confirmedOrders, totalRevenue, todayRevenue } });
     } catch (error) {
@@ -469,10 +472,12 @@ app.post('/send-whatsapp', async (req, res) => {
 
         const orderCode = await generateOrderCode();
         const d = orderData.delivery || {};
+        const paymentMethod = (orderData.payment_method || 'cash').toLowerCase();
+        const paymentStatus = paymentMethod === 'cash' ? 'paid' : 'pending';
         await query(`
-            INSERT INTO orders (order_code, customer_name, customer_phone, customer_class, customer_school, delivery_date, items, total, payment_method, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        `, [orderCode, d.name || 'Client', d.phone || '', d.class || null, d.school || null, d.date || null, JSON.stringify(orderData.items || []), orderData.total || 0, orderData.payment_method || 'cash', d.notes || null]);
+            INSERT INTO orders (order_code, customer_name, customer_phone, customer_class, customer_school, delivery_date, items, total, payment_method, payment_status, notes)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `, [orderCode, d.name || 'Client', d.phone || '', d.class || null, d.school || null, d.date || null, JSON.stringify(orderData.items || []), orderData.total || 0, paymentMethod, paymentStatus, d.notes || null]);
 
         const order = await queryOne('SELECT * FROM orders WHERE order_code = $1', [orderCode]);
         const whatsappLink = generateWhatsAppLink(order);
