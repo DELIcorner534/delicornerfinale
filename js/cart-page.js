@@ -225,8 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentBancontactInput = document.getElementById('payment-bancontact');
     const paymentCashInput = document.getElementById('payment-cash');
     const paymentSecurityNote = document.querySelector('.payment-security');
-    const pacapimCashHint = document.getElementById('pacapimCashHint');
-
     function setActivePaymentMethod(selectedInput) {
         document.querySelectorAll('.payment-method').forEach(function(label) {
             label.classList.toggle('active', label.contains(selectedInput));
@@ -234,25 +232,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updatePaymentOptionsForSchool(school) {
-        if (typeof window.delicornerSyncCashPayment === 'function') {
-            window.delicornerSyncCashPayment(school);
-            return;
-        }
         const isPacapim = school === 'Pacapim';
         if (paymentCashOption) {
-            paymentCashOption.style.display = 'block';
-            paymentCashOption.classList.toggle('payment-method--disabled', !isPacapim);
+            paymentCashOption.style.display = isPacapim ? 'block' : 'none';
         }
-        if (paymentCashInput) paymentCashInput.disabled = !isPacapim;
+        if (paymentCashInput && !isPacapim) {
+            paymentCashInput.checked = false;
+        }
         if (!isPacapim && paymentBancontactInput) {
             paymentBancontactInput.checked = true;
             setActivePaymentMethod(paymentBancontactInput);
         }
         if (paymentSecurityNote) {
             paymentSecurityNote.style.display = isPacapim ? 'none' : 'block';
-        }
-        if (pacapimCashHint) {
-            pacapimCashHint.style.display = isPacapim ? 'none' : 'block';
         }
     }
 
@@ -262,13 +254,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     document.querySelectorAll('.payment-method').forEach(function(label) {
-        label.addEventListener('click', function(e) {
+        label.addEventListener('click', function() {
             const input = label.querySelector('input[name="payment_method"]');
-            if (input && input.disabled) {
-                e.preventDefault();
-                showAlert('Kies eerst Pacapim bij School om contant te betalen.', '💵');
-                return;
-            }
             if (input) setActivePaymentMethod(input);
         });
     });
