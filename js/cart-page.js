@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentBancontactInput = document.getElementById('payment-bancontact');
     const paymentCashInput = document.getElementById('payment-cash');
     const paymentSecurityNote = document.querySelector('.payment-security');
+    const pacapimCashHint = document.getElementById('pacapimCashHint');
 
     function setActivePaymentMethod(selectedInput) {
         document.querySelectorAll('.payment-method').forEach(function(label) {
@@ -243,6 +244,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (paymentSecurityNote) {
             paymentSecurityNote.style.display = isPacapim ? 'none' : 'block';
+        }
+        if (pacapimCashHint) {
+            pacapimCashHint.style.display = isPacapim ? 'none' : 'block';
         }
     }
 
