@@ -104,7 +104,10 @@ function formatOrderMessage(orderData, orderNumber) {
     message += `   Telefoon: ${orderData.delivery?.phone || 'N/A'}\n\n`;
     message += `🛒 *Artikelen:*\n${formatItemsList(orderData.items || [])}\n\n`;
     message += `💰 *Totaal: €${total}*\n`;
-    message += `💳 Betaling: ${orderData.payment_method === 'bancontact' ? 'Bancontact' : (orderData.payment_method || 'N/A')}\n\n`;
+    const paymentLabel = orderData.payment_method === 'bancontact'
+        ? 'Bancontact'
+        : (orderData.payment_method === 'cash' ? 'Contant' : (orderData.payment_method || 'N/A'));
+    message += `💳 Betaling: ${paymentLabel}\n\n`;
     message += `🔐 Verificatiecode: ${orderData.verificationCode || 'N/A'}`;
     
     return message;

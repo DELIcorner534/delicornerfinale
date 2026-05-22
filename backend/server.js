@@ -99,7 +99,7 @@ app.post('/send-whatsapp', async (req, res) => {
                 '6': orderData.delivery?.phone || 'N/A',
                 '7': formatItemsList(orderData.items || []),
                 '8': (typeof orderData.total === 'number' ? orderData.total.toFixed(2) : String(orderData.total || '0')).replace('.', ','),
-                '9': orderData.payment_method === 'bancontact' ? 'Bancontact' : (orderData.payment_method || 'N/A'),
+                '9': orderData.payment_method === 'bancontact' ? 'Bancontact' : (orderData.payment_method === 'cash' ? 'Contant' : (orderData.payment_method || 'N/A')),
                 '10': orderData.verificationCode || 'N/A'
             };
             

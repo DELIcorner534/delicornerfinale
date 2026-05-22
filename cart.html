@@ -140,6 +140,7 @@
                                 <option value="">Selecteer een school</option>
                                 <option value="Campus Parklaan">Campus Parklaan</option>
                                 <option value="Campus Vondel">Campus Vondel</option>
+                                <option value="Pacapim">Pacapim</option>
                             </select>
                         </div>
 
@@ -183,7 +184,7 @@
                         <h3 data-i18n="cart.paymentMethod">Méthode de paiement</h3>
                         
                         <div class="payment-methods">
-                            <label class="payment-method active" for="payment-bancontact">
+                            <label class="payment-method active" for="payment-bancontact" id="payment-bancontact-label">
                                 <input type="radio" id="payment-bancontact" name="payment_method" value="bancontact" checked>
                                 <div class="payment-method-content">
                                     <div class="payment-icon">
@@ -192,6 +193,16 @@
                                     <div>
                                         <strong data-i18n="cart.bancontact">Bancontact</strong>
                                         <span data-i18n="cart.bancontactDesc">Paiement sécurisé en ligne</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="payment-method" for="payment-cash" id="payment-cash-option" style="display: none;">
+                                <input type="radio" id="payment-cash" name="payment_method" value="cash">
+                                <div class="payment-method-content">
+                                    <div class="payment-icon">💵</div>
+                                    <div>
+                                        <strong data-i18n="cart.cash">Contant</strong>
+                                        <span data-i18n="cart.cashDesc">Betaling bij aflevering</span>
                                     </div>
                                 </div>
                             </label>

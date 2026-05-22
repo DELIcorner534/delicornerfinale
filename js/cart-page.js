@@ -219,6 +219,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Payment methods: cash only for Pacapim
+    const deliverySchoolSelect = document.getElementById('deliverySchool');
+    const paymentCashOption = document.getElementById('payment-cash-option');
+    const paymentBancontactInput = document.getElementById('payment-bancontact');
+    const paymentCashInput = document.getElementById('payment-cash');
+    const paymentSecurityNote = document.querySelector('.payment-security');
+
+    function setActivePaymentMethod(selectedInput) {
+        document.querySelectorAll('.payment-method').forEach(function(label) {
+            label.classList.toggle('active', label.contains(selectedInput));
+        });
+    }
+
+    function updatePaymentOptionsForSchool(school) {
+        const isPacapim = school === 'Pacapim';
+        if (paymentCashOption) {
+            paymentCashOption.style.display = isPacapim ? 'block' : 'none';
+        }
+        if (!isPacapim && paymentBancontactInput) {
+            paymentBancontactInput.checked = true;
+            setActivePaymentMethod(paymentBancontactInput);
+        }
+        if (paymentSecurityNote) {
+            paymentSecurityNote.style.display = isPacapim ? 'none' : 'block';
+        }
+    }
+
+    document.querySelectorAll('input[name="payment_method"]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            setActivePaymentMethod(input);
+        });
+    });
+    document.querySelectorAll('.payment-method').forEach(function(label) {
+        label.addEventListener('click', function() {
+            const input = label.querySelector('input[name="payment_method"]');
+            if (input) setActivePaymentMethod(input);
+        });
+    });
+
+    if (deliverySchoolSelect) {
+        deliverySchoolSelect.addEventListener('change', function() {
+            updatePaymentOptionsForSchool(this.value);
+        });
+        updatePaymentOptionsForSchool(deliverySchoolSelect.value);
+    }
+
     // Initial render
     renderCart();
 
@@ -316,6 +362,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 showAlert('Selecteer een betaalmethode.', '💳');
                 return;
             }
+
+            const selectedSchool = deliverySchool?.value || '';
+            if (paymentMethod.value === 'cash' && selectedSchool !== 'Pacapim') {
+                showAlert('Contant betalen is alleen mogelijk voor Pacapim.', '💳');
+                return;
+            }
             
             // Format the date for display (DD/MM/YYYY)
             const dateObj = new Date(deliveryDate.value);
@@ -350,6 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const isBancontact = paymentMethod.value === 'bancontact';
+            const isCash = paymentMethod.value === 'cash';
 
             if (isBancontact) {
                 if (typeof processBancontactPayment !== 'function') {
@@ -382,6 +435,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     showAlert('Kan niet doorverwijzen naar Bancontact. ' + (err.message || 'Probeer opnieuw.'), '❌');
                 }
                 return;
+            }
+
+            if (isCash) {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const checkoutBtn = document.getElementById('checkoutBtn');
+                if (loadingOverlay) loadingOverlay.style.display = 'flex';
+                if (checkoutBtn) {
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.innerHTML = '<span>⏳ Even geduld...</span>';
+                }
             }
 
             if (typeof processWhatsAppOrder !== 'function') {

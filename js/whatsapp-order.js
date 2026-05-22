@@ -136,7 +136,10 @@ function formatWhatsAppMessage(orderData, orderNumber, verificationCode = null) 
     });
     
     message += `💰 *TOTAAL: €${orderData.total.toFixed(2).replace('.', ',')}*\n\n`;
-    message += `💳 Betaalmethode: ${orderData.payment_method === 'bancontact' ? 'Bancontact' : orderData.payment_method}\n\n`;
+    const paymentLabel = orderData.payment_method === 'bancontact'
+        ? 'Bancontact'
+        : (orderData.payment_method === 'cash' ? 'Contant' : (orderData.payment_method || 'N/A'));
+    message += `💳 Betaalmethode: ${paymentLabel}\n\n`;
     message += `🔐 *Verificatiecode: ${verificationCode}*\n`;
     message += `\n✅ Bedankt voor uw bestelling!`;
     
