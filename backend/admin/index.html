@@ -293,6 +293,19 @@
         .status-delivered { background: var(--success); color: white; }
         .status-cancelled { background: #f8d7da; color: #721c24; }
 
+        .payment-badge {
+            display: inline-block;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .payment-cash { background: #fff3cd; color: #856404; }
+        .payment-bancontact { background: #cce5ff; color: #004085; }
+        .payment-other { background: #e9ecef; color: #495057; }
+
         /* Items List */
         .items-list {
             font-size: 0.85rem;
@@ -646,6 +659,14 @@
                 </select>
             </div>
             <div class="search-group">
+                <label for="filterPayment">Betaling</label>
+                <select id="filterPayment">
+                    <option value="">Alle betalingen</option>
+                    <option value="cash">Contant</option>
+                    <option value="bancontact">Bancontact</option>
+                </select>
+            </div>
+            <div class="search-group">
                 <label for="filterDate">Datum</label>
                 <input type="date" id="filterDate">
             </div>
@@ -666,6 +687,7 @@
                         <th>Klant</th>
                         <th>Artikelen</th>
                         <th>Totaal</th>
+                        <th>Betaling</th>
                         <th>Status</th>
                         <th>Datum</th>
                         <th>Acties</th>
@@ -673,7 +695,7 @@
                 </thead>
                 <tbody id="ordersBody">
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="loading">
                                 <div class="loading-spinner"></div>
                                 <p>Bestellingen laden...</p>
@@ -798,6 +820,7 @@
                 const status = document.getElementById('filterStatus').value;
                 const date = document.getElementById('filterDate').value;
                 const school = document.getElementById('filterSchool').value;
+                const payment = document.getElementById('filterPayment').value;
                 
                 let url = `${API_BASE}/api/orders?limit=100`;
                 if (status) url += `&status=${status}`;
@@ -812,6 +835,9 @@
                     if (school) {
                         orders = orders.filter(o => (o.customer && o.customer.school) === school);
                     }
+                    if (payment) {
+                        orders = orders.filter(o => (o.paymentMethod || '').toLowerCase() === payment);
+                    }
                     ordersCache = orders;
                     renderOrders(orders);
                     updateNewOrdersIndicator(orders);
@@ -822,7 +848,7 @@
                 console.error('Error loading orders:', error);
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty-state">
                                 <div class="empty-state-icon">❌</div>
                                 <p>Fout bij het laden van bestellingen</p>
@@ -880,7 +906,7 @@
             if (orders.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty-state">
                                 <div class="empty-state-icon">📭</div>
                                 <p>Geen bestellingen gevonden</p>
@@ -919,6 +945,9 @@
                     </td>
                     <td>
                         <strong>€${order.total.toFixed(2).replace('.', ',')}</strong>
+                    </td>
+                    <td>
+                        <span class="payment-badge payment-${getPaymentClass(order.paymentMethod)}">${getPaymentLabel(order.paymentMethod)}</span>
                     </td>
                     <td>
                         <span class="status-badge status-${order.status}">${getStatusLabel(order.status)}</span>
@@ -1000,7 +1029,9 @@
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Betaalmethode</div>
-                    <div class="detail-value">${order.paymentMethod || 'N/A'}</div>
+                    <div class="detail-value">
+                        <span class="payment-badge payment-${getPaymentClass(order.paymentMethod)}">${getPaymentLabel(order.paymentMethod)}</span>
+                    </div>
                 </div>
                 ${order.notes ? `
                     <div class="detail-row">
@@ -1088,7 +1119,7 @@
                             Totaal: €${order.total.toFixed(2).replace('.', ',')}
                         </h2>
 
-                        <p><strong>Betaalmethode:</strong> ${order.paymentMethod || 'N/A'}</p>
+                        <p><strong>Betaalmethode:</strong> ${getPaymentLabel(order.paymentMethod)}</p>
                         ${order.notes ? `<p><strong>Opmerkingen:</strong> ${order.notes}</p>` : ''}
                     </div>
                 </body>
@@ -1122,6 +1153,7 @@
                             <small>${order.customer.school || ''} ${order.customer.class || ''}</small>
                         </td>
                         <td>${itemsSummary}</td>
+                        <td>${getPaymentLabel(order.paymentMethod)}</td>
                         <td style="text-align:right;">€${order.total.toFixed(2).replace('.', ',')}</td>
                     </tr>
                 `;
@@ -1160,6 +1192,7 @@
                                 <th>Code</th>
                                 <th>Klant / School</th>
                                 <th>Artikelen</th>
+                                <th>Betaling</th>
                                 <th style="text-align:right;">Totaal</th>
                             </tr>
                         </thead>
@@ -1258,6 +1291,20 @@
                 cancelled: 'Geannuleerd'
             };
             return labels[status] || status;
+        }
+
+        function getPaymentLabel(method) {
+            const m = (method || '').toLowerCase();
+            if (m === 'cash') return 'Contant';
+            if (m === 'bancontact') return 'Bancontact';
+            return method || 'Onbekend';
+        }
+
+        function getPaymentClass(method) {
+            const m = (method || '').toLowerCase();
+            if (m === 'cash') return 'cash';
+            if (m === 'bancontact') return 'bancontact';
+            return 'other';
         }
 
         function formatDate(dateStr) {
